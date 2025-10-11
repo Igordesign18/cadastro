@@ -584,68 +584,62 @@
             let formHTML = '';
 
             if (selectedSaleType === 'Combo') {
-                formHTML = `
-                    <div class="form-group">
-                        <label class="form-label">CPF do Cliente</label>
-                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" id="quantity" value="1" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select id="status">
-                            <option value="Pendente">Pendente</option>
-                            <option value="Efetivado">Efetivado</option>
-                        </select>
-                    </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
-                `;
+                formHTML = '<div class="form-group">' +
+                    '<label class="form-label">CPF do Cliente</label>' +
+                    '<input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">Quantidade</label>' +
+                    '<input type="number" id="quantity" value="1" min="1">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">Status</label>' +
+                    '<select id="status">' +
+                    '<option value="Pendente">Pendente</option>' +
+                    '<option value="Efetivado">Efetivado</option>' +
+                    '</select>' +
+                    '</div>' +
+                    '<button onclick="handleAddSale()">' +
+                    icons.check +
+                    '<span>Registrar Venda</span>' +
+                    '</button>';
             } else if (selectedSaleType === 'BrisaChip') {
-                formHTML = `
-                    <div class="form-group">
-                        <label class="form-label">CPF do Cliente</label>
-                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" id="quantity" value="1" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">ICCID (Obrigatório)</label>
-                        <input type="text" id="iccid" placeholder="Digite o ICCID do chip">
-                    </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
-                `;
+                formHTML = '<div class="form-group">' +
+                    '<label class="form-label">CPF do Cliente</label>' +
+                    '<input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">Quantidade</label>' +
+                    '<input type="number" id="quantity" value="1" min="1">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">ICCID (Obrigatório)</label>' +
+                    '<input type="text" id="iccid" placeholder="Digite o ICCID do chip">' +
+                    '</div>' +
+                    '<button onclick="handleAddSale()">' +
+                    icons.check +
+                    '<span>Registrar Venda</span>' +
+                    '</button>';
             } else if (selectedSaleType === 'Fibra') {
-                formHTML = `
-                    <div class="form-group">
-                        <label class="form-label">CPF do Cliente</label>
-                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" id="quantity" value="1" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select id="status">
-                            <option value="Pendente">Pendente</option>
-                            <option value="Efetivado">Efetivado</option>
-                        </select>
-                    </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
-                `;
+                formHTML = '<div class="form-group">' +
+                    '<label class="form-label">CPF do Cliente</label>' +
+                    '<input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">Quantidade</label>' +
+                    '<input type="number" id="quantity" value="1" min="1">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                    '<label class="form-label">Status</label>' +
+                    '<select id="status">' +
+                    '<option value="Pendente">Pendente</option>' +
+                    '<option value="Efetivado">Efetivado</option>' +
+                    '</select>' +
+                    '</div>' +
+                    '<button onclick="handleAddSale()">' +
+                    icons.check +
+                    '<span>Registrar Venda</span>' +
+                    '</button>';
             } else {
                 formHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">Selecione um tipo de serviço acima</p>';
             }
