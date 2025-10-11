@@ -972,10 +972,18 @@
                                     <p style="color: #999; margin-top: 5px;">Bem-vindo, ${currentUser.user_metadata && currentUser.user_metadata.full_name ? currentUser.user_metadata.full_name : currentUser.email}</p>
                                 </div>
                             </div>
-                            <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 24px;">
-                                ${icons.logout}
-                                <span>Sair</span>
-                            </button>
+                            <div style="display: flex; gap: 10px;">
+                                ${isAdmin ? `
+                                    <button onclick="changePage('admin')" style="width: auto; padding: 12px 24px; background: #28a745;">
+                                        ${icons.settings}
+                                        <span>Admin</span>
+                                    </button>
+                                ` : ''}
+                                <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 24px;">
+                                    ${icons.logout}
+                                    <span>Sair</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -1288,7 +1296,10 @@
 
             const success = await login(email, password);
             if (success) {
-                if (currentPage === 'payment') {
+                // Se for admin, vai direto para painel administrativo
+                if (currentUser.userData && currentUser.userData.is_admin) {
+                    await changePage('admin');
+                } else if (currentPage === 'payment') {
                     await render();
                 } else {
                     await changePage('dashboard');
@@ -1413,7 +1424,26 @@
             
             if (sessionResult.data.session) {
                 currentUser = sessionResult.data.session.user;
-                currentPage = 'dashboard';
+                
+                // Buscar dados do usuário
+                const userData = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (userData.data) {
+                    currentUser.userData = userData.data;
+                    
+                    // Se for admin, vai para painel admin
+                    if (userData.data.is_admin) {
+                        currentPage = 'admin';
+                    } else {
+                        currentPage = 'dashboard';
+                    }
+                } else {
+                    currentPage = 'dashboard';
+                }
             }
             
             await render();
