@@ -702,6 +702,16 @@
 
         function selectSaleType(type) {
             selectedSaleType = type;
+            
+            // Atualizar visualmente os cards
+            const cards = document.querySelectorAll('.sale-type-card');
+            cards.forEach(function(card) {
+                card.classList.remove('active');
+            });
+            
+            // Adicionar classe active ao card clicado
+            event.target.closest('.sale-type-card').classList.add('active');
+            
             renderSaleForm();
         }
 
