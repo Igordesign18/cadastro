@@ -929,29 +929,11 @@
         }
 
         async function renderDashboard() {
-            // Verificar se é admin
-            if (currentUser.userData && currentUser.userData.is_admin) {
-                return `
-                    <div class="container">
-                        <div class="card">
-                            <h1 style="text-align: center; color: #ff6b00;">👨‍💼 Área do Administrador</h1>
-                            <p style="text-align: center; color: #999; margin: 20px 0;">
-                                Você está logado como administrador.
-                            </p>
-                            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                                <button onclick="changePage('admin')" style="width: auto; padding: 15px 30px;">
-                                    ${icons.settings}
-                                    <span>Painel Administrativo</span>
-                                </button>
-                                <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 15px 30px;">
-                                    ${icons.logout}
-                                    <span>Sair</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
+            // Verificar se é admin e mostrar botão
+            const isAdmin = currentUser.userData && currentUser.userData.is_admin;
+            
+            console.log('Renderizando dashboard. É admin?', isAdmin);
+            console.log('User data:', currentUser.userData);
             
             const allSales = await getSales();
             const sales = filterSalesByPeriod(allSales, selectedPeriod);
