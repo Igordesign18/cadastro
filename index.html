@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Vendas</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .card { 
+            background: #2a2a2a; 
+            border-radius: 10px; 
+            padding: 30px; 
+            margin-bottom: 20px;
+            border: 2px solid #ff6b00;
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.2);
+        }
+        h1, h2 { color: #ff6b00; margin-bottom: 20px; }
+        input, select, button { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border-radius: 8px; 
+            border: none;
+            font-size: 14px;
+        }
+        input, select { 
+            background: #3a3a3a; 
+            color: #fff;
+            border: 1px solid #555;
+        }
+        input:focus, select:focus { 
+            outline: none; 
+            border-color: #ff6b00;
+        }
+        button { 
+            background: #ff6b00; 
+            color: #fff; 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background: #ff8c00; }
+        .btn-secondary { background: #dc3545; }
+        .btn-secondary:hover { background: #c82333; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .stat-card { 
+            background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%); 
+            padding: 20px; 
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-value { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #444; }
+        th { color: #ff6b00; }
+        .hidden { display: none; }
+        .text-center { text-align: center; }
+        .link { color: #ff6b00; cursor: pointer; text-decoration: underline; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // ==================== CONFIGURAÇÃO DO SUPABASE ====================
+        // SUBSTITUA ESTAS CREDENCIAIS PELAS SUAS
+        const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+        const SUPABASE_KEY = 'SUA-CHAVE-PUBLICA-AQUI';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentPage = 'register';
+        let currentUser = null;
+
+        // ==================== FUNÇÕES DE AUTENTICAÇÃO ====================
+        async function register(fullName, email, phone, password) {
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: { full_name: fullName, phone: phone }
+                    }
+                });
+                
+                if (error) throw error;
+                
+                await supabase.from('users').insert([{
+                    id: data.user.id,
+                    full_name: fullName,
+                    email: email,
+                    phone: phone,
+                    password: password
+                }]);
+                
+                alert('Cadastro realizado com sucesso! Faça login para continuar.');
+                return true;
+            } catch (error) {
+                alert('Erro ao cadastrar: ' + error.message);
+                return false;
+            }
+        }
+
+        async function login(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                currentUser = data.user;
+                return true;
+            } catch (error) {
+                alert('Erro ao fazer login: ' + error.message);
+                return false;
+            }
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+        }
+
+        // ==================== FUNÇÕES DE SERVIÇOS ====================
+        async function addService(name, type, price) {
+            try {
+                const { error } = await supabase.from('services').insert([{
+                    user_id: currentUser.id,
+                    name: name,
+                    type: type,
+                    price: parseFloat(price)
+                }]);
+                
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                alert('Erro ao adicionar serviço: ' + error.message);
+                return false;
+            }
+        }
+
+        async function getServices() {
+            try {
+                const { data, error } = await supabase
+                    .from('services')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                return error ? [] : data;
+            } catch (error) {
+                return [];
+            }
+        }
+
+        // ==================== FUNÇÕES DE VENDAS ====================
+        async function addSale(serviceId, serviceName, serviceType, servicePrice, customerCPF, quantity, iccid) {
+            try {
+                const totalValue = parseFloat(servicePrice) * parseInt(quantity);
+                
+                const { error } = await supabase.from('sales').insert([{
+                    user_id: currentUser.id,
+                    service_id: serviceId,
+                    service_name: serviceName,
+                    service_type: serviceType,
+                    service_price: parseFloat(servicePrice),
+                    customer_cpf: customerCPF,
+                    quantity: parseInt(quantity),
+                    iccid: iccid || null,
+                    total_value: totalValue
+                }]);
+                
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                alert('Erro ao registrar venda: ' + error.message);
+                return false;
+            }
+        }
+
+        async function getSales() {
+            try {
+                const { data, error } = await supabase
+                    .from('sales')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                return error ? [] : data;
+            } catch (error) {
+                return [];
+            }
+        }
+
+        // ==================== RENDERIZAÇÃO DAS PÁGINAS ====================
+        function renderRegisterPage() {
+            return `
+                <div class="container">
+                    <div style="max-width: 500px; margin: 100px auto;">
+                        <div class="card">
+                            <h1 class="text-center">📋 Cadastro de Usuário</h1>
+                            <input type="text" id="fullName" placeholder="Nome Completo">
+                            <input type="email" id="email" placeholder="Email">
+                            <input type="tel" id="phone" placeholder="Telefone">
+                            <input type="password" id="password" placeholder="Senha">
+                            <button onclick="handleRegister()">Cadastrar</button>
+                            <p class="text-center" style="margin-top: 15px; color: #999;">
+                                Já tem uma conta? 
+                                <span class="link" onclick="changePage('login')">Faça login</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLoginPage() {
+            return `
+                <div class="container">
+                    <div style="max-width: 500px; margin: 100px auto;">
+                        <div class="card">
+                            <h1 class="text-center">🔐 Login</h1>
+                            <input type="email" id="loginEmail" placeholder="Email">
+                            <input type="password" id="loginPassword" placeholder="Senha">
+                            <button onclick="handleLogin()">Entrar</button>
+                            <p class="text-center" style="margin-top: 15px; color: #999;">
+                                Não tem uma conta? 
+                                <span class="link" onclick="changePage('register')">Cadastre-se</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function renderDashboard() {
+            const services = await getServices();
+            const sales = await getSales();
+            
+            const totalSales = sales.reduce((acc, sale) => acc + parseFloat(sale.total_value), 0);
+            const salesByType = {};
+            
+            sales.forEach(sale => {
+                if (!salesByType[sale.service_type]) {
+                    salesByType[sale.service_type] = { count: 0, value: 0 };
+                }
+                salesByType[sale.service_type].count += sale.quantity;
+                salesByType[sale.service_type].value += parseFloat(sale.total_value);
+            });
+
+            return `
+                <div class="container">
+                    <div class="card">
+                        <div class="flex-between">
+                            <div>
+                                <h1>📊 Dashboard de Vendas</h1>
+                                <p style="color: #999;">Bem-vindo, ${currentUser.user_metadata.full_name || currentUser.email}</p>
+                            </div>
+                            <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 30px;">Sair</button>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div style="opacity: 0.9;">💰 Total de Vendas</div>
+                            <div class="stat-value">R$ ${totalSales.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div style="opacity: 0.9;">📈 Número de Vendas</div>
+                            <div class="stat-value">${sales.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div style="opacity: 0.9;">🛠️ Serviços Cadastrados</div>
+                            <div class="stat-value">${services.length}</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>➕ Cadastrar Serviço</h2>
+                        <div class="grid">
+                            <input type="text" id="serviceName" placeholder="Nome do Serviço">
+                            <select id="serviceType">
+                                <option value="">Tipo de Serviço</option>
+                                <option value="Chip Avulso">📱 Chip Avulso</option>
+                                <option value="Combo FTTH">📦 Combo FTTH (Internet + BrisaChip)</option>
+                                <option value="FTTH Fibra">🌐 FTTH Fibra Óptica</option>
+                            </select>
+                            <input type="number" id="servicePrice" placeholder="Preço (R$)" step="0.01" min="0">
+                            <button onclick="handleAddService()">Adicionar Serviço</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>💼 Registrar Venda</h2>
+                        <div style="margin-bottom: 15px;">
+                            <select id="saleService" style="margin-bottom: 15px;">
+                                <option value="">Selecione o Serviço</option>
+                                ${services.map(s => `
+                                    <option value="${s.id}" data-name="${s.name}" data-type="${s.type}" data-price="${s.price}">
+                                        ${s.name} - ${s.type} (R$ ${parseFloat(s.price).toFixed(2)})
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="grid-2">
+                            <input type="text" id="customerCPF" placeholder="CPF do Cliente" maxlength="14">
+                            <input type="number" id="quantity" placeholder="Quantidade" min="1" value="1">
+                        </div>
+                        <input type="text" id="iccid" placeholder="ICCID (apenas para Chip Avulso - opcional)">
+                        <button onclick="handleAddSale()">Registrar Venda</button>
+                    </div>
+
+                    <div class="card">
+                        <h2>📋 Últimas Vendas</h2>
+                        ${sales.length > 0 ? `
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Serviço</th>
+                                            <th>Tipo</th>
+                                            <th>CPF</th>
+                                            <th>Qtd</th>
+                                            <th>Valor Total</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${sales.map(sale => `
+                                            <tr>
+                                                <td>${sale.service_name}</td>
+                                                <td>${sale.service_type}</td>
+                                                <td>${sale.customer_cpf}</td>
+                                                <td>${sale.quantity}</td>
+                                                <td style="color: #ff6b00; font-weight: bold;">R$ ${parseFloat(sale.total_value).toFixed(2)}</td>
+                                                <td>${new Date(sale.created_at).toLocaleDateString('pt-BR')}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : '<p class="text-center" style="color: #999; padding: 40px 0;">Nenhuma venda registrada ainda</p>'}
+                    </div>
+
+                    <div class="card">
+                        <h2>🛠️ Serviços Cadastrados</h2>
+                        ${services.length > 0 ? `
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Tipo</th>
+                                            <th>Preço</th>
+                                            <th>Data de Cadastro</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${services.map(service => `
+                                            <tr>
+                                                <td>${service.name}</td>
+                                                <td>${service.type}</td>
+                                                <td style="color: #ff6b00; font-weight: bold;">R$ ${parseFloat(service.price).toFixed(2)}</td>
+                                                <td>${new Date(service.created_at).toLocaleDateString('pt-BR')}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : '<p class="text-center" style="color: #999; padding: 40px 0;">Nenhum serviço cadastrado ainda</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== HANDLERS ====================
+        async function handleRegister() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!fullName || !email || !phone || !password) {
+                alert('⚠️ Preencha todos os campos!');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('⚠️ A senha deve ter no mínimo 6 caracteres!');
+                return;
+            }
+
+            const success = await register(fullName, email, phone, password);
+            if (success) {
+                changePage('login');
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('⚠️ Preencha todos os campos!');
+                return;
+            }
+
+            const success = await login(email, password);
+            if (success) {
+                await changePage('dashboard');
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Deseja realmente sair?')) {
+                await logout();
+                changePage('login');
+            }
+        }
+
+        async function handleAddService() {
+            const name = document.getElementById('serviceName').value.trim();
+            const type = document.getElementById('serviceType').value;
+            const price = document.getElementById('servicePrice').value;
+
+            if (!name || !type || !price) {
+                alert('⚠️ Preencha todos os campos!');
+                return;
+            }
+
+            if (parseFloat(price) <= 0) {
+                alert('⚠️ O preço deve ser maior que zero!');
+                return;
+            }
+
+            const success = await addService(name, type, price);
+            if (success) {
+                alert('✅ Serviço cadastrado com sucesso!');
+                await changePage('dashboard');
+            }
+        }
+
+        async function handleAddSale() {
+            const selectEl = document.getElementById('saleService');
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            const serviceId = selectEl.value;
+            const serviceName = selectedOption.getAttribute('data-name');
+            const serviceType = selectedOption.getAttribute('data-type');
+            const servicePrice = selectedOption.getAttribute('data-price');
+            const customerCPF = document.getElementById('customerCPF').value.trim();
+            const quantity = document.getElementById('quantity').value;
+            const iccid = document.getElementById('iccid').value.trim();
+
+            if (!serviceId || !customerCPF || !quantity) {
+                alert('⚠️ Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            if (parseInt(quantity) <= 0) {
+                alert('⚠️ A quantidade deve ser maior que zero!');
+                return;
+            }
+
+            const success = await addSale(serviceId, serviceName, serviceType, servicePrice, customerCPF, quantity, iccid);
+            if (success) {
+                alert('✅ Venda registrada com sucesso!');
+                await changePage('dashboard');
+            }
+        }
+
+        async function changePage(page) {
+            currentPage = page;
+            await render();
+        }
+
+        async function render() {
+            let html = '';
+            
+            if (currentPage === 'register') {
+                html = renderRegisterPage();
+            } else if (currentPage === 'login') {
+                html = renderLoginPage();
+            } else if (currentPage === 'dashboard') {
+                html = await renderDashboard();
+            }
+            
+            document.getElementById('app').innerHTML = html;
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        async function init() {
+            const { data } = await supabase.auth.getSession();
+            
+            if (data.session) {
+                currentUser = data.session.user;
+                currentPage = 'dashboard';
+            }
+            
+            await render();
+        }
+
+        init();
+    </script>
+</body>
+</html>
