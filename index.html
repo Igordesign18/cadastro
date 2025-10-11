@@ -48,6 +48,7 @@
             transition: background 0.3s;
         }
         button:hover { background: #ff8c00; }
+        button:disabled { background: #666; cursor: not-allowed; }
         .btn-secondary { background: #dc3545; }
         .btn-secondary:hover { background: #c82333; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
@@ -62,10 +63,13 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #444; }
         th { color: #ff6b00; }
-        .hidden { display: none; }
         .text-center { text-align: center; }
         .link { color: #ff6b00; cursor: pointer; text-decoration: underline; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .alert { padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .alert-success { background: #28a745; color: white; }
+        .alert-error { background: #dc3545; color: white; }
+        .alert-info { background: #17a2b8; color: white; }
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr; }
             .grid-2 { grid-template-columns: 1fr; }
@@ -76,56 +80,102 @@
     <div id="app"></div>
 
     <script>
-        // ==================== CONFIGURAÇÃO DO SUPABASE ====================
-        // SUBSTITUA ESTAS CREDENCIAIS PELAS SUAS
-        const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
-        const SUPABASE_KEY = 'SUA-CHAVE-PUBLICA-AQUI';
+        const SUPABASE_URL = 'https://uijtwnzfhkgzxmdtrxjm.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpanR3bnpmaGtnenhtZHRyeGptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyMTY5NzksImV4cCI6MjA3NTc5Mjk3OX0.pM9RF3LKPzWpBqiXi75Mj9wQiRw4ysbaItfFPEdq6fE';
+        
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentPage = 'register';
         let currentUser = null;
 
-        // ==================== FUNÇÕES DE AUTENTICAÇÃO ====================
+        // Testar conexão
+        async function testConnection() {
+            try {
+                console.log('🔍 Testando conexão com Supabase...');
+                const { data, error } = await supabase.from('users').select('count').limit(1);
+                if (error) {
+                    console.error('❌ Erro na conexão:', error);
+                    return false;
+                }
+                console.log('✅ Conexão OK!');
+                return true;
+            } catch (err) {
+                console.error('❌ Erro crítico:', err);
+                return false;
+            }
+        }
+
         async function register(fullName, email, phone, password) {
             try {
+                console.log('📝 Iniciando cadastro...');
+                console.log('Email:', email);
+                
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
-                        data: { full_name: fullName, phone: phone }
+                        data: {
+                            full_name: fullName,
+                            phone: phone
+                        },
+                        emailRedirectTo: window.location.origin
                     }
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Erro no signUp:', error);
+                    throw error;
+                }
                 
-                await supabase.from('users').insert([{
-                    id: data.user.id,
-                    full_name: fullName,
-                    email: email,
-                    phone: phone,
-                    password: password
-                }]);
+                console.log('✅ Usuário criado:', data);
                 
-                alert('Cadastro realizado com sucesso! Faça login para continuar.');
+                if (data.user) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    const { error: insertError } = await supabase
+                        .from('users')
+                        .insert([{
+                            id: data.user.id,
+                            full_name: fullName,
+                            email: email,
+                            phone: phone,
+                            password: password
+                        }]);
+                    
+                    if (insertError) {
+                        console.warn('⚠️ Erro ao inserir na tabela users:', insertError);
+                    }
+                }
+                
+                alert('✅ Cadastro realizado! Verifique seu email ou faça login diretamente.');
                 return true;
             } catch (error) {
-                alert('Erro ao cadastrar: ' + error.message);
+                console.error('❌ Erro completo:', error);
+                alert('❌ Erro: ' + error.message + '\n\nVerifique o console (F12) para mais detalhes.');
                 return false;
             }
         }
 
         async function login(email, password) {
             try {
+                console.log('🔐 Tentando fazer login...');
+                
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Erro no login:', error);
+                    throw error;
+                }
+                
+                console.log('✅ Login bem-sucedido!');
                 currentUser = data.user;
                 return true;
             } catch (error) {
-                alert('Erro ao fazer login: ' + error.message);
+                console.error('❌ Erro:', error);
+                alert('❌ Erro ao fazer login: ' + error.message);
                 return false;
             }
         }
@@ -135,7 +185,6 @@
             currentUser = null;
         }
 
-        // ==================== FUNÇÕES DE SERVIÇOS ====================
         async function addService(name, type, price) {
             try {
                 const { error } = await supabase.from('services').insert([{
@@ -148,7 +197,8 @@
                 if (error) throw error;
                 return true;
             } catch (error) {
-                alert('Erro ao adicionar serviço: ' + error.message);
+                console.error('❌ Erro ao adicionar serviço:', error);
+                alert('❌ Erro: ' + error.message);
                 return false;
             }
         }
@@ -163,11 +213,11 @@
                 
                 return error ? [] : data;
             } catch (error) {
+                console.error('❌ Erro ao buscar serviços:', error);
                 return [];
             }
         }
 
-        // ==================== FUNÇÕES DE VENDAS ====================
         async function addSale(serviceId, serviceName, serviceType, servicePrice, customerCPF, quantity, iccid) {
             try {
                 const totalValue = parseFloat(servicePrice) * parseInt(quantity);
@@ -187,7 +237,8 @@
                 if (error) throw error;
                 return true;
             } catch (error) {
-                alert('Erro ao registrar venda: ' + error.message);
+                console.error('❌ Erro ao registrar venda:', error);
+                alert('❌ Erro: ' + error.message);
                 return false;
             }
         }
@@ -202,22 +253,26 @@
                 
                 return error ? [] : data;
             } catch (error) {
+                console.error('❌ Erro ao buscar vendas:', error);
                 return [];
             }
         }
 
-        // ==================== RENDERIZAÇÃO DAS PÁGINAS ====================
         function renderRegisterPage() {
             return `
                 <div class="container">
                     <div style="max-width: 500px; margin: 100px auto;">
                         <div class="card">
                             <h1 class="text-center">📋 Cadastro de Usuário</h1>
+                            <div class="alert alert-info">
+                                ℹ️ Certifique-se de que está conectado à internet e que executou o SQL no Supabase.
+                            </div>
                             <input type="text" id="fullName" placeholder="Nome Completo">
                             <input type="email" id="email" placeholder="Email">
                             <input type="tel" id="phone" placeholder="Telefone">
-                            <input type="password" id="password" placeholder="Senha">
-                            <button onclick="handleRegister()">Cadastrar</button>
+                            <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)">
+                            <button id="btnRegister" onclick="handleRegister()">Cadastrar</button>
+                            <button onclick="testConnection()" style="background: #17a2b8;">🔍 Testar Conexão</button>
                             <p class="text-center" style="margin-top: 15px; color: #999;">
                                 Já tem uma conta? 
                                 <span class="link" onclick="changePage('login')">Faça login</span>
@@ -236,7 +291,7 @@
                             <h1 class="text-center">🔐 Login</h1>
                             <input type="email" id="loginEmail" placeholder="Email">
                             <input type="password" id="loginPassword" placeholder="Senha">
-                            <button onclick="handleLogin()">Entrar</button>
+                            <button id="btnLogin" onclick="handleLogin()">Entrar</button>
                             <p class="text-center" style="margin-top: 15px; color: #999;">
                                 Não tem uma conta? 
                                 <span class="link" onclick="changePage('register')">Cadastre-se</span>
@@ -268,7 +323,7 @@
                         <div class="flex-between">
                             <div>
                                 <h1>📊 Dashboard de Vendas</h1>
-                                <p style="color: #999;">Bem-vindo, ${currentUser.user_metadata.full_name || currentUser.email}</p>
+                                <p style="color: #999;">Bem-vindo, ${currentUser.user_metadata?.full_name || currentUser.email}</p>
                             </div>
                             <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 30px;">Sair</button>
                         </div>
@@ -296,7 +351,7 @@
                             <select id="serviceType">
                                 <option value="">Tipo de Serviço</option>
                                 <option value="Chip Avulso">📱 Chip Avulso</option>
-                                <option value="Combo FTTH">📦 Combo FTTH (Internet + BrisaChip)</option>
+                                <option value="Combo FTTH">📦 Combo FTTH</option>
                                 <option value="FTTH Fibra">🌐 FTTH Fibra Óptica</option>
                             </select>
                             <input type="number" id="servicePrice" placeholder="Preço (R$)" step="0.01" min="0">
@@ -317,10 +372,10 @@
                             </select>
                         </div>
                         <div class="grid-2">
-                            <input type="text" id="customerCPF" placeholder="CPF do Cliente" maxlength="14">
+                            <input type="text" id="customerCPF" placeholder="CPF do Cliente">
                             <input type="number" id="quantity" placeholder="Quantidade" min="1" value="1">
                         </div>
-                        <input type="text" id="iccid" placeholder="ICCID (apenas para Chip Avulso - opcional)">
+                        <input type="text" id="iccid" placeholder="ICCID (opcional)">
                         <button onclick="handleAddSale()">Registrar Venda</button>
                     </div>
 
@@ -366,7 +421,7 @@
                                             <th>Nome</th>
                                             <th>Tipo</th>
                                             <th>Preço</th>
-                                            <th>Data de Cadastro</th>
+                                            <th>Data</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -387,8 +442,11 @@
             `;
         }
 
-        // ==================== HANDLERS ====================
         async function handleRegister() {
+            const btn = document.getElementById('btnRegister');
+            btn.disabled = true;
+            btn.textContent = 'Cadastrando...';
+            
             const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
             const phone = document.getElementById('phone').value.trim();
@@ -396,11 +454,15 @@
 
             if (!fullName || !email || !phone || !password) {
                 alert('⚠️ Preencha todos os campos!');
+                btn.disabled = false;
+                btn.textContent = 'Cadastrar';
                 return;
             }
 
             if (password.length < 6) {
                 alert('⚠️ A senha deve ter no mínimo 6 caracteres!');
+                btn.disabled = false;
+                btn.textContent = 'Cadastrar';
                 return;
             }
 
@@ -408,14 +470,23 @@
             if (success) {
                 changePage('login');
             }
+            
+            btn.disabled = false;
+            btn.textContent = 'Cadastrar';
         }
 
         async function handleLogin() {
+            const btn = document.getElementById('btnLogin');
+            btn.disabled = true;
+            btn.textContent = 'Entrando...';
+            
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
             if (!email || !password) {
                 alert('⚠️ Preencha todos os campos!');
+                btn.disabled = false;
+                btn.textContent = 'Entrar';
                 return;
             }
 
@@ -423,6 +494,9 @@
             if (success) {
                 await changePage('dashboard');
             }
+            
+            btn.disabled = false;
+            btn.textContent = 'Entrar';
         }
 
         async function handleLogout() {
@@ -449,7 +523,7 @@
 
             const success = await addService(name, type, price);
             if (success) {
-                alert('✅ Serviço cadastrado com sucesso!');
+                alert('✅ Serviço cadastrado!');
                 await changePage('dashboard');
             }
         }
@@ -470,14 +544,9 @@
                 return;
             }
 
-            if (parseInt(quantity) <= 0) {
-                alert('⚠️ A quantidade deve ser maior que zero!');
-                return;
-            }
-
             const success = await addSale(serviceId, serviceName, serviceType, servicePrice, customerCPF, quantity, iccid);
             if (success) {
-                alert('✅ Venda registrada com sucesso!');
+                alert('✅ Venda registrada!');
                 await changePage('dashboard');
             }
         }
@@ -501,8 +570,11 @@
             document.getElementById('app').innerHTML = html;
         }
 
-        // ==================== INICIALIZAÇÃO ====================
         async function init() {
+            console.log('🚀 Iniciando aplicação...');
+            console.log('📍 URL:', SUPABASE_URL);
+            console.log('🔑 Key:', SUPABASE_KEY ? 'Configurada ✅' : 'Não configurada ❌');
+            
             const { data } = await supabase.auth.getSession();
             
             if (data.session) {
