@@ -465,12 +465,16 @@
 
         async function login(email, password) {
             try {
+                console.log('Tentando login com:', email);
+                
                 const result = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
                 
                 if (result.error) throw result.error;
+                
+                console.log('Login auth OK, buscando dados do usuário...');
                 
                 // Buscar dados do usuário na tabela
                 const userData = await supabase
@@ -479,12 +483,21 @@
                     .eq('email', email)
                     .single();
                 
-                if (userData.error) throw userData.error;
+                console.log('Dados do usuário:', userData);
+                
+                if (userData.error) {
+                    console.warn('Erro ao buscar usuário, continuando sem dados extras');
+                    currentUser = result.data.user;
+                    currentUser.userData = null;
+                    return true;
+                }
+                
+                currentUser = result.data.user;
+                currentUser.userData = userData.data;
                 
                 // Verificar se é admin
                 if (userData.data.is_admin) {
-                    currentUser = result.data.user;
-                    currentUser.userData = userData.data;
+                    console.log('Usuário é admin');
                     return true;
                 }
                 
@@ -503,17 +516,15 @@
                 
                 // Verificar pagamento
                 if (userData.data.payment_status === 'Pendente') {
-                    currentUser = result.data.user;
-                    currentUser.userData = userData.data;
+                    console.log('Redirecionando para pagamento');
                     currentPage = 'payment';
                     return true;
                 }
                 
-                currentUser = result.data.user;
-                currentUser.userData = userData.data;
+                console.log('Login completo com sucesso');
                 return true;
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('Erro no login:', error);
                 alert('Erro ao fazer login: ' + error.message);
                 return false;
             }
@@ -918,6 +929,30 @@
         }
 
         async function renderDashboard() {
+            // Verificar se é admin
+            if (currentUser.userData && currentUser.userData.is_admin) {
+                return `
+                    <div class="container">
+                        <div class="card">
+                            <h1 style="text-align: center; color: #ff6b00;">👨‍💼 Área do Administrador</h1>
+                            <p style="text-align: center; color: #999; margin: 20px 0;">
+                                Você está logado como administrador.
+                            </p>
+                            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="changePage('admin')" style="width: auto; padding: 15px 30px;">
+                                    ${icons.settings}
+                                    <span>Painel Administrativo</span>
+                                </button>
+                                <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 15px 30px;">
+                                    ${icons.logout}
+                                    <span>Sair</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             const allSales = await getSales();
             const sales = filterSalesByPeriod(allSales, selectedPeriod);
             
@@ -1380,6 +1415,10 @@
                 html = renderRegisterPage();
             } else if (currentPage === 'login') {
                 html = renderLoginPage();
+            } else if (currentPage === 'payment') {
+                html = renderPaymentPage();
+            } else if (currentPage === 'admin') {
+                html = await renderAdminPage();
             } else if (currentPage === 'dashboard') {
                 html = await renderDashboard();
             }
