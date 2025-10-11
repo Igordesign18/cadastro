@@ -78,6 +78,34 @@
             margin-bottom: 10px;
         }
         .stat-value { font-size: 36px; font-weight: 700; margin: 10px 0; }
+        .service-stat-card {
+            background: linear-gradient(135deg, #3a3a3a 0%, #454545 100%);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #ff6b00;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .service-stat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .service-icon-wrapper {
+            background: rgba(255, 107, 0, 0.15);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .service-stat-value {
+            font-size: 40px;
+            font-weight: 700;
+            color: #ff6b00;
+            margin: 10px 0;
+        }
+        .service-stat-label {
+            color: #999;
+            font-size: 13px;
+        }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #444; }
         th { color: #ff6b00; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -203,7 +231,7 @@
 
         async function register(fullName, email, phone, password) {
             try {
-                const { data, error } = await supabase.auth.signUp({
+                const result = await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
@@ -215,23 +243,23 @@
                     }
                 });
                 
-                if (error) throw error;
+                if (result.error) throw result.error;
                 
-                if (data.user) {
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                if (result.data.user) {
+                    await new Promise(function(resolve) {
+                        setTimeout(resolve, 500);
+                    });
                     
-                    const { error: insertError } = await supabase
-                        .from('users')
-                        .insert([{
-                            id: data.user.id,
-                            full_name: fullName,
-                            email: email,
-                            phone: phone,
-                            password: password
-                        }]);
+                    const insertResult = await supabase.from('users').insert([{
+                        id: result.data.user.id,
+                        full_name: fullName,
+                        email: email,
+                        phone: phone,
+                        password: password
+                    }]);
                     
-                    if (insertError) {
-                        console.warn('Aviso:', insertError);
+                    if (insertResult.error) {
+                        console.warn('Aviso:', insertResult.error);
                     }
                 }
                 
@@ -246,13 +274,13 @@
 
         async function login(email, password) {
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const result = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
                 
-                if (error) throw error;
-                currentUser = data.user;
+                if (result.error) throw result.error;
+                currentUser = result.data.user;
                 return true;
             } catch (error) {
                 console.error('Erro:', error);
@@ -268,7 +296,7 @@
 
         async function addSale(saleType, customerCPF, quantity, iccid, status) {
             try {
-                const { error } = await supabase.from('sales').insert([{
+                const result = await supabase.from('sales').insert([{
                     user_id: currentUser.id,
                     service_type: saleType,
                     customer_cpf: customerCPF,
@@ -278,7 +306,7 @@
                     created_at: new Date().toISOString()
                 }]);
                 
-                if (error) throw error;
+                if (result.error) throw result.error;
                 return true;
             } catch (error) {
                 console.error('Erro:', error);
@@ -289,13 +317,13 @@
 
         async function getSales() {
             try {
-                const { data, error } = await supabase
+                const result = await supabase
                     .from('sales')
                     .select('*')
                     .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false });
                 
-                return error ? [] : data;
+                return result.error ? [] : result.data;
             } catch (error) {
                 return [];
             }
@@ -303,13 +331,13 @@
 
         async function updateSaleStatus(saleId, newStatus) {
             try {
-                const { error } = await supabase
+                const result = await supabase
                     .from('sales')
                     .update({ status: newStatus })
                     .eq('id', saleId)
                     .eq('user_id', currentUser.id);
                 
-                if (error) throw error;
+                if (result.error) throw result.error;
                 return true;
             } catch (error) {
                 console.error('Erro:', error);
@@ -369,7 +397,95 @@
             `;
         }
 
- class="stat-value">${pendentes}</div>
+        async function renderDashboard() {
+            const sales = await getSales();
+            
+            const totalSales = sales.length;
+            const efetivados = sales.filter(function(s) { return s.status === 'Efetivado'; }).length;
+            const pendentes = sales.filter(function(s) { return s.status === 'Pendente'; }).length;
+            
+            const comboSales = sales.filter(function(s) { return s.service_type === 'Combo'; }).length;
+            const chipSales = sales.filter(function(s) { return s.service_type === 'BrisaChip'; }).length;
+            const fibraSales = sales.filter(function(s) { return s.service_type === 'Fibra'; }).length;
+
+            return `
+                <div class="container">
+                    <div class="card">
+                        <div class="flex-between">
+                            <div class="section-header" style="margin: 0;">
+                                ${icons.dashboard}
+                                <div>
+                                    <h1 style="margin: 0;">Dashboard de Vendas</h1>
+                                    <p style="color: #999; margin-top: 5px;">Bem-vindo, ${currentUser.user_metadata && currentUser.user_metadata.full_name ? currentUser.user_metadata.full_name : currentUser.email}</p>
+                                </div>
+                            </div>
+                            <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 24px;">
+                                ${icons.logout}
+                                <span>Sair</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                ${icons.chart}
+                                <span>Total de Vendas</span>
+                            </div>
+                            <div class="stat-value">${totalSales}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                ${icons.check}
+                                <span>Efetivados</span>
+                            </div>
+                            <div class="stat-value">${efetivados}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                ${icons.package}
+                                <span>Pendentes</span>
+                            </div>
+                            <div class="stat-value">${pendentes}</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="section-header">
+                            ${icons.layers}
+                            <h2 style="margin: 0;">Vendas por Tipo de Serviço</h2>
+                        </div>
+                        <div class="grid">
+                            <div class="service-stat-card">
+                                <div class="service-stat-header">
+                                    <div class="service-icon-wrapper">
+                                        ${icons.layers}
+                                    </div>
+                                    <span style="color: #ccc; font-size: 15px; font-weight: 500;">Combo (Internet + Chip)</span>
+                                </div>
+                                <div class="service-stat-value">${comboSales}</div>
+                                <div class="service-stat-label">vendas realizadas</div>
+                            </div>
+                            <div class="service-stat-card">
+                                <div class="service-stat-header">
+                                    <div class="service-icon-wrapper">
+                                        ${icons.smartphone}
+                                    </div>
+                                    <span style="color: #ccc; font-size: 15px; font-weight: 500;">BrisaChip</span>
+                                </div>
+                                <div class="service-stat-value">${chipSales}</div>
+                                <div class="service-stat-label">chips vendidos</div>
+                            </div>
+                            <div class="service-stat-card">
+                                <div class="service-stat-header">
+                                    <div class="service-icon-wrapper">
+                                        ${icons.wifi}
+                                    </div>
+                                    <span style="color: #ccc; font-size: 15px; font-weight: 500;">FTTH (Fibra Óptica)</span>
+                                </div>
+                                <div class="service-stat-value">${fibraSales}</div>
+                                <div class="service-stat-label">fibras instaladas</div>
+                            </div>
                         </div>
                     </div>
 
@@ -420,7 +536,8 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${sales.map(sale => `
+                                        ${sales.map(function(sale) {
+                                            return `
                                             <tr>
                                                 <td>${sale.service_type}</td>
                                                 <td>${sale.customer_cpf}</td>
@@ -439,7 +556,8 @@
                                                     }
                                                 </td>
                                             </tr>
-                                        `).join('')}
+                                            `;
+                                        }).join('')}
                                     </tbody>
                                 </table>
                             </div>
@@ -487,6 +605,47 @@
                         <span>Registrar Venda</span>
                     </button>
                 `;
+            } else if (selectedSaleType === 'BrisaChip') {
+                formHTML = `
+                    <div class="form-group">
+                        <label class="form-label">CPF do Cliente</label>
+                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ICCID (Obrigatório)</label>
+                        <input type="text" id="iccid" placeholder="Digite o ICCID do chip">
+                    </div>
+                    <button onclick="handleAddSale()">
+                        ${icons.check}
+                        <span>Registrar Venda</span>
+                    </button>
+                `;
+            } else if (selectedSaleType === 'Fibra') {
+                formHTML = `
+                    <div class="form-group">
+                        <label class="form-label">CPF do Cliente</label>
+                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select id="status">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Efetivado">Efetivado</option>
+                        </select>
+                    </div>
+                    <button onclick="handleAddSale()">
+                        ${icons.check}
+                        <span>Registrar Venda</span>
+                    </button>
+                `;
             } else {
                 formHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">Selecione um tipo de serviço acima</p>';
             }
@@ -497,7 +656,7 @@
         async function handleRegister() {
             const btn = document.getElementById('btnRegister');
             btn.disabled = true;
-            btn.innerHTML = `${icons.check}<span>Cadastrando...</span>`;
+            btn.innerHTML = icons.check + '<span>Cadastrando...</span>';
             
             const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -507,14 +666,14 @@
             if (!fullName || !email || !phone || !password) {
                 alert('Preencha todos os campos!');
                 btn.disabled = false;
-                btn.innerHTML = `${icons.check}<span>Cadastrar</span>`;
+                btn.innerHTML = icons.check + '<span>Cadastrar</span>';
                 return;
             }
 
             if (password.length < 6) {
                 alert('A senha deve ter no mínimo 6 caracteres!');
                 btn.disabled = false;
-                btn.innerHTML = `${icons.check}<span>Cadastrar</span>`;
+                btn.innerHTML = icons.check + '<span>Cadastrar</span>';
                 return;
             }
 
@@ -524,13 +683,13 @@
             }
             
             btn.disabled = false;
-            btn.innerHTML = `${icons.check}<span>Cadastrar</span>`;
+            btn.innerHTML = icons.check + '<span>Cadastrar</span>';
         }
 
         async function handleLogin() {
             const btn = document.getElementById('btnLogin');
             btn.disabled = true;
-            btn.innerHTML = `${icons.check}<span>Entrando...</span>`;
+            btn.innerHTML = icons.check + '<span>Entrando...</span>';
             
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -538,7 +697,7 @@
             if (!email || !password) {
                 alert('Preencha todos os campos!');
                 btn.disabled = false;
-                btn.innerHTML = `${icons.check}<span>Entrar</span>`;
+                btn.innerHTML = icons.check + '<span>Entrar</span>';
                 return;
             }
 
@@ -548,7 +707,7 @@
             }
             
             btn.disabled = false;
-            btn.innerHTML = `${icons.check}<span>Entrar</span>`;
+            btn.innerHTML = icons.check + '<span>Entrar</span>';
         }
 
         async function handleLogout() {
@@ -559,10 +718,15 @@
         }
 
         async function handleAddSale() {
-            const customerCPF = document.getElementById('customerCPF')?.value.trim();
-            const quantity = document.getElementById('quantity')?.value;
-            const iccid = document.getElementById('iccid')?.value.trim();
-            const status = document.getElementById('status')?.value;
+            const cpfInput = document.getElementById('customerCPF');
+            const quantityInput = document.getElementById('quantity');
+            const iccidInput = document.getElementById('iccid');
+            const statusInput = document.getElementById('status');
+            
+            const customerCPF = cpfInput ? cpfInput.value.trim() : '';
+            const quantity = quantityInput ? quantityInput.value : '1';
+            const iccid = iccidInput ? iccidInput.value.trim() : '';
+            const status = statusInput ? statusInput.value : 'Pendente';
 
             if (!selectedSaleType) {
                 alert('Selecione o tipo de serviço!');
@@ -614,10 +778,10 @@
         }
 
         async function init() {
-            const { data } = await supabase.auth.getSession();
+            const sessionResult = await supabase.auth.getSession();
             
-            if (data.session) {
-                currentUser = data.session.user;
+            if (sessionResult.data.session) {
+                currentUser = sessionResult.data.session.user;
                 currentPage = 'dashboard';
             }
             
@@ -627,45 +791,4 @@
         init();
     </script>
 </body>
-</html></label>
-                        <select id="status">
-                            <option value="Pendente">Pendente</option>
-                            <option value="Efetivado">Efetivado</option>
-                        </select>
-                    </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
-                `;
-            } else if (selectedSaleType === 'BrisaChip') {
-                formHTML = `
-                    <div class="form-group">
-                        <label class="form-label">CPF do Cliente</label>
-                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" id="quantity" value="1" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">ICCID (Obrigatório)</label>
-                        <input type="text" id="iccid" placeholder="Digite o ICCID do chip">
-                    </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
-                `;
-            } else if (selectedSaleType === 'Fibra') {
-                formHTML = `
-                    <div class="form-group">
-                        <label class="form-label">CPF do Cliente</label>
-                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Quantidade</label>
-                        <input type="number" id="quantity" value="1" min="1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status
+</html>
