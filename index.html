@@ -108,30 +108,68 @@
         }
         .date-range-selector {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
-            margin-top: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #333;
+            border-radius: 12px;
+            border: 2px solid #555;
+        }
+        .date-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
         .date-input {
-            background: #3a3a3a;
+            background: #2a2a2a;
             color: #fff;
             border: 2px solid #555;
-            padding: 10px 15px;
+            padding: 12px 20px;
             border-radius: 8px;
             font-size: 14px;
-            width: auto;
+            font-weight: 500;
+            width: 180px;
             cursor: pointer;
+            transition: all 0.3s;
+        }
+        .date-input:hover {
+            border-color: #ff6b00;
+            background: #333;
         }
         .date-input:focus {
             border-color: #ff6b00;
             outline: none;
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
         }
         .date-label {
-            color: #999;
+            color: #ff6b00;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-apply {
+            background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
+            color: #fff;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+            margin-top: 18px;
+        }
+        .btn-apply:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 107, 0, 0.5);
+        }
+        .btn-apply:active {
+            transform: translateY(0);
         }
         .btn-delete {
             background: #dc3545;
@@ -313,8 +351,16 @@
         let currentUser = null;
         let selectedSaleType = '';
         let selectedPeriod = 'daily';
-        let customStartDate = '';
-        let customEndDate = '';
+        let customStartDate = getTodayDate();
+        let customEndDate = getTodayDate();
+
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
 
         const icons = {
             user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
