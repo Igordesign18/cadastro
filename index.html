@@ -16,13 +16,15 @@
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .card { 
             background: #2a2a2a; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             padding: 30px; 
             margin-bottom: 20px;
             border: 2px solid #ff6b00;
             box-shadow: 0 8px 32px rgba(255, 107, 0, 0.2);
         }
-        h1, h2 { color: #ff6b00; margin-bottom: 20px; }
+        h1, h2 { color: #ff6b00; margin-bottom: 20px; font-weight: 600; }
+        h1 { font-size: 28px; }
+        h2 { font-size: 22px; }
         input, select, button { 
             width: 100%; 
             padding: 12px; 
@@ -35,6 +37,7 @@
             background: #3a3a3a; 
             color: #fff;
             border: 1px solid #555;
+            transition: border-color 0.3s;
         }
         input:focus, select:focus { 
             outline: none; 
@@ -43,36 +46,126 @@
         button { 
             background: #ff6b00; 
             color: #fff; 
-            font-weight: bold; 
+            font-weight: 600; 
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        button:hover { background: #ff8c00; }
-        button:disabled { background: #666; cursor: not-allowed; }
+        button:hover { background: #ff8c00; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        button:disabled { background: #666; cursor: not-allowed; transform: none; }
         .btn-secondary { background: #dc3545; }
         .btn-secondary:hover { background: #c82333; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .stat-card { 
             background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%); 
-            padding: 20px; 
-            border-radius: 10px;
+            padding: 25px; 
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.3);
+        }
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0.95;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .stat-value { font-size: 36px; font-weight: 700; margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #444; }
+        th { color: #ff6b00; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { font-size: 14px; }
+        .text-center { text-align: center; }
+        .link { color: #ff6b00; cursor: pointer; text-decoration: none; font-weight: 500; }
+        .link:hover { text-decoration: underline; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .section-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state svg {
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-efetivado {
+            background: #28a745;
+            color: white;
+        }
+        .status-pendente {
+            background: #ffc107;
+            color: #1a1a1a;
+        }
+        .icon { width: 20px; height: 20px; fill: currentColor; flex-shrink: 0; }
+        .icon-lg { width: 24px; height: 24px; }
+        .icon-xl { width: 32px; height: 32px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { 
+            display: block; 
+            color: #999; 
+            font-size: 13px; 
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .sale-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .sale-type-card {
+            background: #3a3a3a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #555;
+            cursor: pointer;
+            transition: all 0.3s;
             text-align: center;
         }
-        .stat-value { font-size: 32px; font-weight: bold; margin: 10px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #444; }
-        th { color: #ff6b00; }
-        .text-center { text-align: center; }
-        .link { color: #ff6b00; cursor: pointer; text-decoration: underline; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .alert { padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .alert-success { background: #28a745; color: white; }
-        .alert-error { background: #dc3545; color: white; }
-        .alert-info { background: #17a2b8; color: white; }
+        .sale-type-card:hover {
+            border-color: #ff6b00;
+            background: #404040;
+        }
+        .sale-type-card.active {
+            border-color: #ff6b00;
+            background: rgba(255, 107, 0, 0.1);
+        }
+        .sale-type-card h3 {
+            color: #fff;
+            margin: 10px 0 5px 0;
+            font-size: 16px;
+        }
+        .sale-type-card p {
+            color: #999;
+            font-size: 12px;
+        }
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr; }
             .grid-2 { grid-template-columns: 1fr; }
+            .stat-value { font-size: 28px; }
+            h1 { font-size: 24px; }
+            h2 { font-size: 20px; }
         }
     </style>
 </head>
@@ -87,29 +180,29 @@
 
         let currentPage = 'register';
         let currentUser = null;
+        let selectedSaleType = '';
 
-        // Testar conexão
-        async function testConnection() {
-            try {
-                console.log('🔍 Testando conexão com Supabase...');
-                const { data, error } = await supabase.from('users').select('count').limit(1);
-                if (error) {
-                    console.error('❌ Erro na conexão:', error);
-                    return false;
-                }
-                console.log('✅ Conexão OK!');
-                return true;
-            } catch (err) {
-                console.error('❌ Erro crítico:', err);
-                return false;
-            }
-        }
+        const icons = {
+            user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+            userLg: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+            lock: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+            lockLg: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+            dashboard: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+            dollar: '<svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
+            chart: '<svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>',
+            package: '<svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>',
+            shoppingCart: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>',
+            list: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
+            logout: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>',
+            check: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+            wifi: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>',
+            smartphone: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>',
+            layers: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>',
+            inbox: '<svg class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>'
+        };
 
         async function register(fullName, email, phone, password) {
             try {
-                console.log('📝 Iniciando cadastro...');
-                console.log('Email:', email);
-                
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
                     password: password,
@@ -122,12 +215,7 @@
                     }
                 });
                 
-                if (error) {
-                    console.error('❌ Erro no signUp:', error);
-                    throw error;
-                }
-                
-                console.log('✅ Usuário criado:', data);
+                if (error) throw error;
                 
                 if (data.user) {
                     await new Promise(resolve => setTimeout(resolve, 500));
@@ -143,39 +231,32 @@
                         }]);
                     
                     if (insertError) {
-                        console.warn('⚠️ Erro ao inserir na tabela users:', insertError);
+                        console.warn('Aviso:', insertError);
                     }
                 }
                 
-                alert('✅ Cadastro realizado! Verifique seu email ou faça login diretamente.');
+                alert('Cadastro realizado com sucesso! Faça login para continuar.');
                 return true;
             } catch (error) {
-                console.error('❌ Erro completo:', error);
-                alert('❌ Erro: ' + error.message + '\n\nVerifique o console (F12) para mais detalhes.');
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar: ' + error.message);
                 return false;
             }
         }
 
         async function login(email, password) {
             try {
-                console.log('🔐 Tentando fazer login...');
-                
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
                 
-                if (error) {
-                    console.error('❌ Erro no login:', error);
-                    throw error;
-                }
-                
-                console.log('✅ Login bem-sucedido!');
+                if (error) throw error;
                 currentUser = data.user;
                 return true;
             } catch (error) {
-                console.error('❌ Erro:', error);
-                alert('❌ Erro ao fazer login: ' + error.message);
+                console.error('Erro:', error);
+                alert('Erro ao fazer login: ' + error.message);
                 return false;
             }
         }
@@ -185,60 +266,23 @@
             currentUser = null;
         }
 
-        async function addService(name, type, price) {
+        async function addSale(saleType, customerCPF, quantity, iccid, status) {
             try {
-                const { error } = await supabase.from('services').insert([{
-                    user_id: currentUser.id,
-                    name: name,
-                    type: type,
-                    price: parseFloat(price)
-                }]);
-                
-                if (error) throw error;
-                return true;
-            } catch (error) {
-                console.error('❌ Erro ao adicionar serviço:', error);
-                alert('❌ Erro: ' + error.message);
-                return false;
-            }
-        }
-
-        async function getServices() {
-            try {
-                const { data, error } = await supabase
-                    .from('services')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
-                
-                return error ? [] : data;
-            } catch (error) {
-                console.error('❌ Erro ao buscar serviços:', error);
-                return [];
-            }
-        }
-
-        async function addSale(serviceId, serviceName, serviceType, servicePrice, customerCPF, quantity, iccid) {
-            try {
-                const totalValue = parseFloat(servicePrice) * parseInt(quantity);
-                
                 const { error } = await supabase.from('sales').insert([{
                     user_id: currentUser.id,
-                    service_id: serviceId,
-                    service_name: serviceName,
-                    service_type: serviceType,
-                    service_price: parseFloat(servicePrice),
+                    service_type: saleType,
                     customer_cpf: customerCPF,
                     quantity: parseInt(quantity),
                     iccid: iccid || null,
-                    total_value: totalValue
+                    status: status || 'Pendente',
+                    created_at: new Date().toISOString()
                 }]);
                 
                 if (error) throw error;
                 return true;
             } catch (error) {
-                console.error('❌ Erro ao registrar venda:', error);
-                alert('❌ Erro: ' + error.message);
+                console.error('Erro:', error);
+                alert('Erro: ' + error.message);
                 return false;
             }
         }
@@ -253,8 +297,23 @@
                 
                 return error ? [] : data;
             } catch (error) {
-                console.error('❌ Erro ao buscar vendas:', error);
                 return [];
+            }
+        }
+
+        async function updateSaleStatus(saleId, newStatus) {
+            try {
+                const { error } = await supabase
+                    .from('sales')
+                    .update({ status: newStatus })
+                    .eq('id', saleId)
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Erro:', error);
+                return false;
             }
         }
 
@@ -263,16 +322,18 @@
                 <div class="container">
                     <div style="max-width: 500px; margin: 100px auto;">
                         <div class="card">
-                            <h1 class="text-center">📋 Cadastro de Usuário</h1>
-                            <div class="alert alert-info">
-                                ℹ️ Certifique-se de que está conectado à internet e que executou o SQL no Supabase.
+                            <div class="section-header" style="justify-content: center;">
+                                ${icons.userLg}
+                                <h1>Cadastro de Usuário</h1>
                             </div>
                             <input type="text" id="fullName" placeholder="Nome Completo">
                             <input type="email" id="email" placeholder="Email">
                             <input type="tel" id="phone" placeholder="Telefone">
                             <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)">
-                            <button id="btnRegister" onclick="handleRegister()">Cadastrar</button>
-                            <button onclick="testConnection()" style="background: #17a2b8;">🔍 Testar Conexão</button>
+                            <button id="btnRegister" onclick="handleRegister()">
+                                ${icons.check}
+                                <span>Cadastrar</span>
+                            </button>
                             <p class="text-center" style="margin-top: 15px; color: #999;">
                                 Já tem uma conta? 
                                 <span class="link" onclick="changePage('login')">Faça login</span>
@@ -288,10 +349,16 @@
                 <div class="container">
                     <div style="max-width: 500px; margin: 100px auto;">
                         <div class="card">
-                            <h1 class="text-center">🔐 Login</h1>
+                            <div class="section-header" style="justify-content: center;">
+                                ${icons.lockLg}
+                                <h1>Login</h1>
+                            </div>
                             <input type="email" id="loginEmail" placeholder="Email">
                             <input type="password" id="loginPassword" placeholder="Senha">
-                            <button id="btnLogin" onclick="handleLogin()">Entrar</button>
+                            <button id="btnLogin" onclick="handleLogin()">
+                                ${icons.check}
+                                <span>Entrar</span>
+                            </button>
                             <p class="text-center" style="margin-top: 15px; color: #999;">
                                 Não tem uma conta? 
                                 <span class="link" onclick="changePage('register')">Cadastre-se</span>
@@ -302,150 +369,135 @@
             `;
         }
 
-        async function renderDashboard() {
-            const services = await getServices();
-            const sales = await getSales();
-            
-            const totalSales = sales.reduce((acc, sale) => acc + parseFloat(sale.total_value), 0);
-            const salesByType = {};
-            
-            sales.forEach(sale => {
-                if (!salesByType[sale.service_type]) {
-                    salesByType[sale.service_type] = { count: 0, value: 0 };
-                }
-                salesByType[sale.service_type].count += sale.quantity;
-                salesByType[sale.service_type].value += parseFloat(sale.total_value);
-            });
+ class="stat-value">${pendentes}</div>
+                        </div>
+                    </div>
 
-            return `
-                <div class="container">
                     <div class="card">
-                        <div class="flex-between">
-                            <div>
-                                <h1>📊 Dashboard de Vendas</h1>
-                                <p style="color: #999;">Bem-vindo, ${currentUser.user_metadata?.full_name || currentUser.email}</p>
+                        <div class="section-header">
+                            ${icons.shoppingCart}
+                            <h2 style="margin: 0;">Registrar Nova Venda</h2>
+                        </div>
+                        
+                        <div class="sale-type-selector">
+                            <div class="sale-type-card ${selectedSaleType === 'Combo' ? 'active' : ''}" onclick="selectSaleType('Combo')">
+                                ${icons.layers}
+                                <h3>Internet Fibra + BrisaChip</h3>
+                                <p>Combo completo</p>
                             </div>
-                            <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 30px;">Sair</button>
+                            <div class="sale-type-card ${selectedSaleType === 'BrisaChip' ? 'active' : ''}" onclick="selectSaleType('BrisaChip')">
+                                ${icons.smartphone}
+                                <h3>BrisaChip</h3>
+                                <p>Chip avulso</p>
+                            </div>
+                            <div class="sale-type-card ${selectedSaleType === 'Fibra' ? 'active' : ''}" onclick="selectSaleType('Fibra')">
+                                ${icons.wifi}
+                                <h3>Fibra Óptica</h3>
+                                <p>Internet avulsa</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="grid">
-                        <div class="stat-card">
-                            <div style="opacity: 0.9;">💰 Total de Vendas</div>
-                            <div class="stat-value">R$ ${totalSales.toFixed(2)}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div style="opacity: 0.9;">📈 Número de Vendas</div>
-                            <div class="stat-value">${sales.length}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div style="opacity: 0.9;">🛠️ Serviços Cadastrados</div>
-                            <div class="stat-value">${services.length}</div>
-                        </div>
+                        <div id="saleForm"></div>
                     </div>
 
                     <div class="card">
-                        <h2>➕ Cadastrar Serviço</h2>
-                        <div class="grid">
-                            <input type="text" id="serviceName" placeholder="Nome do Serviço">
-                            <select id="serviceType">
-                                <option value="">Tipo de Serviço</option>
-                                <option value="Chip Avulso">📱 Chip Avulso</option>
-                                <option value="Combo FTTH">📦 Combo FTTH</option>
-                                <option value="FTTH Fibra">🌐 FTTH Fibra Óptica</option>
-                            </select>
-                            <input type="number" id="servicePrice" placeholder="Preço (R$)" step="0.01" min="0">
-                            <button onclick="handleAddService()">Adicionar Serviço</button>
+                        <div class="section-header">
+                            ${icons.list}
+                            <h2 style="margin: 0;">Histórico de Vendas</h2>
                         </div>
-                    </div>
-
-                    <div class="card">
-                        <h2>💼 Registrar Venda</h2>
-                        <div style="margin-bottom: 15px;">
-                            <select id="saleService" style="margin-bottom: 15px;">
-                                <option value="">Selecione o Serviço</option>
-                                ${services.map(s => `
-                                    <option value="${s.id}" data-name="${s.name}" data-type="${s.type}" data-price="${s.price}">
-                                        ${s.name} - ${s.type} (R$ ${parseFloat(s.price).toFixed(2)})
-                                    </option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="grid-2">
-                            <input type="text" id="customerCPF" placeholder="CPF do Cliente">
-                            <input type="number" id="quantity" placeholder="Quantidade" min="1" value="1">
-                        </div>
-                        <input type="text" id="iccid" placeholder="ICCID (opcional)">
-                        <button onclick="handleAddSale()">Registrar Venda</button>
-                    </div>
-
-                    <div class="card">
-                        <h2>📋 Últimas Vendas</h2>
                         ${sales.length > 0 ? `
                             <div style="overflow-x: auto;">
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Serviço</th>
                                             <th>Tipo</th>
                                             <th>CPF</th>
                                             <th>Qtd</th>
-                                            <th>Valor Total</th>
+                                            <th>ICCID</th>
+                                            <th>Status</th>
                                             <th>Data</th>
+                                            <th>Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         ${sales.map(sale => `
                                             <tr>
-                                                <td>${sale.service_name}</td>
                                                 <td>${sale.service_type}</td>
                                                 <td>${sale.customer_cpf}</td>
                                                 <td>${sale.quantity}</td>
-                                                <td style="color: #ff6b00; font-weight: bold;">R$ ${parseFloat(sale.total_value).toFixed(2)}</td>
+                                                <td>${sale.iccid || '-'}</td>
+                                                <td>
+                                                    <span class="status-badge status-${sale.status.toLowerCase()}">
+                                                        ${sale.status}
+                                                    </span>
+                                                </td>
                                                 <td>${new Date(sale.created_at).toLocaleDateString('pt-BR')}</td>
+                                                <td>
+                                                    ${sale.status === 'Pendente' 
+                                                        ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #28a745;">Efetivar</button>`
+                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a;">Marcar Pendente</button>`
+                                                    }
+                                                </td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
                                 </table>
                             </div>
-                        ` : '<p class="text-center" style="color: #999; padding: 40px 0;">Nenhuma venda registrada ainda</p>'}
-                    </div>
-
-                    <div class="card">
-                        <h2>🛠️ Serviços Cadastrados</h2>
-                        ${services.length > 0 ? `
-                            <div style="overflow-x: auto;">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Nome</th>
-                                            <th>Tipo</th>
-                                            <th>Preço</th>
-                                            <th>Data</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${services.map(service => `
-                                            <tr>
-                                                <td>${service.name}</td>
-                                                <td>${service.type}</td>
-                                                <td style="color: #ff6b00; font-weight: bold;">R$ ${parseFloat(service.price).toFixed(2)}</td>
-                                                <td>${new Date(service.created_at).toLocaleDateString('pt-BR')}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
+                        ` : `
+                            <div class="empty-state">
+                                ${icons.inbox}
+                                <p>Nenhuma venda registrada ainda</p>
                             </div>
-                        ` : '<p class="text-center" style="color: #999; padding: 40px 0;">Nenhum serviço cadastrado ainda</p>'}
+                        `}
                     </div>
                 </div>
             `;
         }
 
+        function selectSaleType(type) {
+            selectedSaleType = type;
+            renderSaleForm();
+        }
+
+        function renderSaleForm() {
+            const formContainer = document.getElementById('saleForm');
+            if (!formContainer) return;
+
+            let formHTML = '';
+
+            if (selectedSaleType === 'Combo') {
+                formHTML = `
+                    <div class="form-group">
+                        <label class="form-label">CPF do Cliente</label>
+                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select id="status">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Efetivado">Efetivado</option>
+                        </select>
+                    </div>
+                    <button onclick="handleAddSale()">
+                        ${icons.check}
+                        <span>Registrar Venda</span>
+                    </button>
+                `;
+            } else {
+                formHTML = '<p style="text-align: center; color: #999; padding: 40px 0;">Selecione um tipo de serviço acima</p>';
+            }
+
+            formContainer.innerHTML = formHTML;
+        }
+
         async function handleRegister() {
             const btn = document.getElementById('btnRegister');
             btn.disabled = true;
-            btn.textContent = 'Cadastrando...';
+            btn.innerHTML = `${icons.check}<span>Cadastrando...</span>`;
             
             const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -453,16 +505,16 @@
             const password = document.getElementById('password').value;
 
             if (!fullName || !email || !phone || !password) {
-                alert('⚠️ Preencha todos os campos!');
+                alert('Preencha todos os campos!');
                 btn.disabled = false;
-                btn.textContent = 'Cadastrar';
+                btn.innerHTML = `${icons.check}<span>Cadastrar</span>`;
                 return;
             }
 
             if (password.length < 6) {
-                alert('⚠️ A senha deve ter no mínimo 6 caracteres!');
+                alert('A senha deve ter no mínimo 6 caracteres!');
                 btn.disabled = false;
-                btn.textContent = 'Cadastrar';
+                btn.innerHTML = `${icons.check}<span>Cadastrar</span>`;
                 return;
             }
 
@@ -472,21 +524,21 @@
             }
             
             btn.disabled = false;
-            btn.textContent = 'Cadastrar';
+            btn.innerHTML = `${icons.check}<span>Cadastrar</span>`;
         }
 
         async function handleLogin() {
             const btn = document.getElementById('btnLogin');
             btn.disabled = true;
-            btn.textContent = 'Entrando...';
+            btn.innerHTML = `${icons.check}<span>Entrando...</span>`;
             
             const email = document.getElementById('loginEmail').value.trim();
             const password = document.getElementById('loginPassword').value;
 
             if (!email || !password) {
-                alert('⚠️ Preencha todos os campos!');
+                alert('Preencha todos os campos!');
                 btn.disabled = false;
-                btn.textContent = 'Entrar';
+                btn.innerHTML = `${icons.check}<span>Entrar</span>`;
                 return;
             }
 
@@ -496,7 +548,7 @@
             }
             
             btn.disabled = false;
-            btn.textContent = 'Entrar';
+            btn.innerHTML = `${icons.check}<span>Entrar</span>`;
         }
 
         async function handleLogout() {
@@ -506,47 +558,38 @@
             }
         }
 
-        async function handleAddService() {
-            const name = document.getElementById('serviceName').value.trim();
-            const type = document.getElementById('serviceType').value;
-            const price = document.getElementById('servicePrice').value;
+        async function handleAddSale() {
+            const customerCPF = document.getElementById('customerCPF')?.value.trim();
+            const quantity = document.getElementById('quantity')?.value;
+            const iccid = document.getElementById('iccid')?.value.trim();
+            const status = document.getElementById('status')?.value;
 
-            if (!name || !type || !price) {
-                alert('⚠️ Preencha todos os campos!');
+            if (!selectedSaleType) {
+                alert('Selecione o tipo de serviço!');
                 return;
             }
 
-            if (parseFloat(price) <= 0) {
-                alert('⚠️ O preço deve ser maior que zero!');
+            if (!customerCPF || !quantity) {
+                alert('Preencha todos os campos obrigatórios!');
                 return;
             }
 
-            const success = await addService(name, type, price);
+            if (selectedSaleType === 'BrisaChip' && !iccid) {
+                alert('O campo ICCID é obrigatório para BrisaChip!');
+                return;
+            }
+
+            const success = await addSale(selectedSaleType, customerCPF, quantity, iccid, status);
             if (success) {
-                alert('✅ Serviço cadastrado!');
+                alert('Venda registrada com sucesso!');
+                selectedSaleType = '';
                 await changePage('dashboard');
             }
         }
 
-        async function handleAddSale() {
-            const selectEl = document.getElementById('saleService');
-            const selectedOption = selectEl.options[selectEl.selectedIndex];
-            const serviceId = selectEl.value;
-            const serviceName = selectedOption.getAttribute('data-name');
-            const serviceType = selectedOption.getAttribute('data-type');
-            const servicePrice = selectedOption.getAttribute('data-price');
-            const customerCPF = document.getElementById('customerCPF').value.trim();
-            const quantity = document.getElementById('quantity').value;
-            const iccid = document.getElementById('iccid').value.trim();
-
-            if (!serviceId || !customerCPF || !quantity) {
-                alert('⚠️ Preencha todos os campos obrigatórios!');
-                return;
-            }
-
-            const success = await addSale(serviceId, serviceName, serviceType, servicePrice, customerCPF, quantity, iccid);
+        async function toggleStatus(saleId, newStatus) {
+            const success = await updateSaleStatus(saleId, newStatus);
             if (success) {
-                alert('✅ Venda registrada!');
                 await changePage('dashboard');
             }
         }
@@ -571,10 +614,6 @@
         }
 
         async function init() {
-            console.log('🚀 Iniciando aplicação...');
-            console.log('📍 URL:', SUPABASE_URL);
-            console.log('🔑 Key:', SUPABASE_KEY ? 'Configurada ✅' : 'Não configurada ❌');
-            
             const { data } = await supabase.auth.getSession();
             
             if (data.session) {
@@ -588,4 +627,45 @@
         init();
     </script>
 </body>
-</html>
+</html></label>
+                        <select id="status">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Efetivado">Efetivado</option>
+                        </select>
+                    </div>
+                    <button onclick="handleAddSale()">
+                        ${icons.check}
+                        <span>Registrar Venda</span>
+                    </button>
+                `;
+            } else if (selectedSaleType === 'BrisaChip') {
+                formHTML = `
+                    <div class="form-group">
+                        <label class="form-label">CPF do Cliente</label>
+                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ICCID (Obrigatório)</label>
+                        <input type="text" id="iccid" placeholder="Digite o ICCID do chip">
+                    </div>
+                    <button onclick="handleAddSale()">
+                        ${icons.check}
+                        <span>Registrar Venda</span>
+                    </button>
+                `;
+            } else if (selectedSaleType === 'Fibra') {
+                formHTML = `
+                    <div class="form-group">
+                        <label class="form-label">CPF do Cliente</label>
+                        <input type="text" id="customerCPF" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantidade</label>
+                        <input type="number" id="quantity" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status
