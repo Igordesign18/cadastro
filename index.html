@@ -180,6 +180,42 @@
         .btn-delete:hover {
             background: #c82333;
         }
+        .btn-approve {
+            background: #28a745;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        .btn-approve:hover {
+            background: #218838;
+        }
+        .btn-reject {
+            background: #dc3545;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        .btn-reject:hover {
+            background: #c82333;
+        }
+        .payment-card {
+            max-width: 500px;
+            margin: 100px auto;
+            text-align: center;
+        }
+        .payment-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ff6b00;
+            margin: 20px 0;
+        }
+        .payment-info {
+            background: rgba(255, 107, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ff6b00;
+            margin: 20px 0;
+        }
         .service-stat-card {
             background: linear-gradient(135deg, #3a3a3a 0%, #454545 100%);
             padding: 25px;
@@ -407,7 +443,10 @@
                         full_name: fullName,
                         email: email,
                         phone: phone,
-                        password: password
+                        password: password,
+                        status: 'Pendente',
+                        is_admin: false,
+                        payment_status: 'Pendente'
                     }]);
                     
                     if (insertResult.error) {
@@ -415,7 +454,7 @@
                     }
                 }
                 
-                alert('Cadastro realizado com sucesso! Faça login para continuar.');
+                alert('Cadastro realizado! Aguarde a aprovação do administrador e realize o pagamento de R$ 5,00 para ter acesso completo.');
                 return true;
             } catch (error) {
                 console.error('Erro:', error);
@@ -432,7 +471,46 @@
                 });
                 
                 if (result.error) throw result.error;
+                
+                // Buscar dados do usuário na tabela
+                const userData = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('email', email)
+                    .single();
+                
+                if (userData.error) throw userData.error;
+                
+                // Verificar se é admin
+                if (userData.data.is_admin) {
+                    currentUser = result.data.user;
+                    currentUser.userData = userData.data;
+                    return true;
+                }
+                
+                // Verificar status do usuário
+                if (userData.data.status === 'Rejeitado') {
+                    await supabase.auth.signOut();
+                    alert('Seu cadastro foi rejeitado pelo administrador. Entre em contato para mais informações.');
+                    return false;
+                }
+                
+                if (userData.data.status === 'Pendente') {
+                    await supabase.auth.signOut();
+                    alert('Seu cadastro está aguardando aprovação do administrador.');
+                    return false;
+                }
+                
+                // Verificar pagamento
+                if (userData.data.payment_status === 'Pendente') {
+                    currentUser = result.data.user;
+                    currentUser.userData = userData.data;
+                    currentPage = 'payment';
+                    return true;
+                }
+                
                 currentUser = result.data.user;
+                currentUser.userData = userData.data;
                 return true;
             } catch (error) {
                 console.error('Erro:', error);
@@ -585,6 +663,235 @@
             `;
         }
 
+        function renderPaymentPage() {
+            return `
+                <div class="container">
+                    <div class="payment-card">
+                        <div class="card">
+                            <h1 style="text-align: center;">💳 Pagamento Necessário</h1>
+                            <p style="color: #999; text-align: center; margin: 20px 0;">
+                                Para ter acesso completo ao sistema, realize o pagamento da taxa de ativação:
+                            </p>
+                            <div class="payment-value">R$ 5,00</div>
+                            <div class="payment-info">
+                                <p style="color: #ccc; margin-bottom: 10px;">
+                                    ${icons.check} Acesso vitalício ao sistema
+                                </p>
+                                <p style="color: #ccc; margin-bottom: 10px;">
+                                    ${icons.check} Gerenciamento de vendas ilimitado
+                                </p>
+                                <p style="color: #ccc;">
+                                    ${icons.check} Dashboard completo com relatórios
+                                </p>
+                            </div>
+                            <button onclick="simulatePayment()" style="margin-top: 20px;">
+                                ${icons.dollar}
+                                <span>Simular Pagamento (R$ 5,00)</span>
+                            </button>
+                            <button onclick="handleLogout()" class="btn-secondary" style="margin-top: 10px;">
+                                ${icons.logout}
+                                <span>Sair</span>
+                            </button>
+                            <p style="color: #777; font-size: 12px; margin-top: 20px;">
+                                * Este é um pagamento simulado para demonstração
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function renderAdminPage() {
+            const allUsersResult = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            const allUsers = allUsersResult.data || [];
+            const pendingUsers = allUsers.filter(function(u) { return u.status === 'Pendente' && !u.is_admin; });
+            const approvedUsers = allUsers.filter(function(u) { return u.status === 'Aprovado' && !u.is_admin; });
+            const rejectedUsers = allUsers.filter(function(u) { return u.status === 'Rejeitado' && !u.is_admin; });
+
+            return `
+                <div class="container">
+                    <div class="card">
+                        <div class="flex-between">
+                            <div class="section-header" style="margin: 0;">
+                                ${icons.settings}
+                                <h1 style="margin: 0;">Painel do Administrador</h1>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="changePage('dashboard')" style="width: auto; padding: 12px 24px;">
+                                    ${icons.dashboard}
+                                    <span>Dashboard</span>
+                                </button>
+                                <button class="btn-secondary" onclick="handleLogout()" style="width: auto; padding: 12px 24px;">
+                                    ${icons.logout}
+                                    <span>Sair</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                ${icons.package}
+                                <span>Cadastros Pendentes</span>
+                            </div>
+                            <div class="stat-value">${pendingUsers.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                ${icons.check}
+                                <span>Usuários Aprovados</span>
+                            </div>
+                            <div class="stat-value">${approvedUsers.length}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                ${icons.user}
+                                <span>Total de Usuários</span>
+                            </div>
+                            <div class="stat-value">${allUsers.filter(function(u) { return !u.is_admin; }).length}</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="section-header">
+                            ${icons.package}
+                            <h2 style="margin: 0;">Cadastros Pendentes de Aprovação</h2>
+                        </div>
+                        ${pendingUsers.length > 0 ? `
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Email</th>
+                                            <th>Telefone</th>
+                                            <th>Data de Cadastro</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${pendingUsers.map(function(user) {
+                                            return `
+                                            <tr>
+                                                <td>${user.full_name}</td>
+                                                <td>${user.email}</td>
+                                                <td>${user.phone}</td>
+                                                <td>${new Date(user.created_at).toLocaleDateString('pt-BR')}</td>
+                                                <td style="display: flex; gap: 8px;">
+                                                    <button onclick="approveUser('${user.id}')" class="btn-approve">Aprovar</button>
+                                                    <button onclick="rejectUser('${user.id}')" class="btn-reject">Rejeitar</button>
+                                                </td>
+                                            </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="empty-state">
+                                ${icons.inbox}
+                                <p>Nenhum cadastro pendente</p>
+                            </div>
+                        `}
+                    </div>
+
+                    <div class="card">
+                        <div class="section-header">
+                            ${icons.check}
+                            <h2 style="margin: 0;">Usuários Aprovados</h2>
+                        </div>
+                        ${approvedUsers.length > 0 ? `
+                            <div style="overflow-x: auto;">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Email</th>
+                                            <th>Telefone</th>
+                                            <th>Status Pagamento</th>
+                                            <th>Data de Cadastro</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${approvedUsers.map(function(user) {
+                                            return `
+                                            <tr>
+                                                <td>${user.full_name}</td>
+                                                <td>${user.email}</td>
+                                                <td>${user.phone}</td>
+                                                <td>
+                                                    <span class="status-badge status-${user.payment_status.toLowerCase()}">
+                                                        ${user.payment_status}
+                                                    </span>
+                                                </td>
+                                                <td>${new Date(user.created_at).toLocaleDateString('pt-BR')}</td>
+                                            </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="empty-state">
+                                ${icons.inbox}
+                                <p>Nenhum usuário aprovado ainda</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function approveUser(userId) {
+            if (confirm('Deseja aprovar este usuário?')) {
+                const result = await supabase
+                    .from('users')
+                    .update({ status: 'Aprovado' })
+                    .eq('id', userId);
+                
+                if (!result.error) {
+                    alert('Usuário aprovado com sucesso!');
+                    changePage('admin');
+                }
+            }
+        }
+
+        async function rejectUser(userId) {
+            if (confirm('Deseja rejeitar este usuário?')) {
+                const result = await supabase
+                    .from('users')
+                    .update({ status: 'Rejeitado' })
+                    .eq('id', userId);
+                
+                if (!result.error) {
+                    alert('Usuário rejeitado!');
+                    changePage('admin');
+                }
+            }
+        }
+
+        async function simulatePayment() {
+            if (confirm('Confirmar pagamento simulado de R$ 5,00?')) {
+                const result = await supabase
+                    .from('users')
+                    .update({ 
+                        payment_status: 'Aprovado',
+                        payment_date: new Date().toISOString()
+                    })
+                    .eq('id', currentUser.id);
+                
+                if (!result.error) {
+                    alert('Pagamento confirmado! Bem-vindo ao sistema!');
+                    changePage('dashboard');
+                }
+            }
+        }
+
         function renderLoginPage() {
             return `
                 <div class="container">
@@ -665,11 +972,18 @@
                         </div>
                         ${selectedPeriod === 'custom' ? `
                             <div class="date-range-selector">
-                                <span class="date-label">De:</span>
-                                <input type="date" id="startDate" class="date-input" value="${customStartDate}" onchange="updateCustomDate()">
-                                <span class="date-label">Até:</span>
-                                <input type="date" id="endDate" class="date-input" value="${customEndDate}" onchange="updateCustomDate()">
-                                <button onclick="applyCustomPeriod()" style="width: auto; padding: 10px 24px; margin: 0;">Aplicar</button>
+                                <div class="date-input-wrapper">
+                                    <label class="date-label">Data Inicial</label>
+                                    <input type="date" id="startDate" class="date-input" value="${customStartDate}" onchange="updateCustomDate()">
+                                </div>
+                                <div class="date-input-wrapper">
+                                    <label class="date-label">Data Final</label>
+                                    <input type="date" id="endDate" class="date-input" value="${customEndDate}" onchange="updateCustomDate()">
+                                </div>
+                                <button onclick="applyCustomPeriod()" class="btn-apply">
+                                    ${icons.check}
+                                    <span>Aplicar Período</span>
+                                </button>
                             </div>
                         ` : ''}
                     </div>
@@ -957,7 +1271,11 @@
 
             const success = await login(email, password);
             if (success) {
-                await changePage('dashboard');
+                if (currentPage === 'payment') {
+                    await render();
+                } else {
+                    await changePage('dashboard');
+                }
             }
             
             btn.disabled = false;
