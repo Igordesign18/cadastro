@@ -78,6 +78,42 @@
             margin-bottom: 10px;
         }
         .stat-value { font-size: 36px; font-weight: 700; margin: 10px 0; }
+        .period-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .period-btn {
+            background: #3a3a3a;
+            color: #fff;
+            border: 2px solid #555;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            width: auto;
+        }
+        .period-btn:hover {
+            border-color: #ff6b00;
+            background: #404040;
+        }
+        .period-btn.active {
+            background: #ff6b00;
+            border-color: #ff6b00;
+            transform: none;
+        }
+        .btn-delete {
+            background: #dc3545;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
         .service-stat-card {
             background: linear-gradient(135deg, #3a3a3a 0%, #454545 100%);
             padding: 25px;
@@ -170,14 +206,53 @@
             cursor: pointer;
             transition: all 0.3s;
             text-align: center;
+            position: relative;
         }
         .sale-type-card:hover {
             border-color: #ff6b00;
             background: #404040;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
         }
         .sale-type-card.active {
             border-color: #ff6b00;
-            background: rgba(255, 107, 0, 0.1);
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.2) 0%, rgba(255, 107, 0, 0.1) 100%);
+            box-shadow: 0 0 20px rgba(255, 107, 0, 0.4);
+            transform: scale(1.05);
+        }
+        .sale-type-card.active::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff6b00;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .sale-type-card h3 {
+            color: #fff;
+            margin: 10px 0 5px 0;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+        .sale-type-card.active h3 {
+            color: #ff6b00;
+            font-weight: 600;
+        }
+        .sale-type-card p {
+            color: #999;
+            font-size: 12px;
+            transition: color 0.3s;
+        }
+        .sale-type-card.active p {
+            color: #ffb366;
         }
         .sale-type-card h3 {
             color: #fff;
@@ -209,6 +284,7 @@
         let currentPage = 'register';
         let currentUser = null;
         let selectedSaleType = '';
+        let selectedPeriod = 'daily';
 
         const icons = {
             user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
@@ -296,13 +372,15 @@
 
         async function addSale(saleType, customerCPF, quantity, iccid, status) {
             try {
+                const finalStatus = saleType === 'BrisaChip' ? 'Efetivado' : (status || 'Pendente');
+                
                 const result = await supabase.from('sales').insert([{
                     user_id: currentUser.id,
                     service_type: saleType,
                     customer_cpf: customerCPF,
                     quantity: parseInt(quantity),
                     iccid: iccid || null,
-                    status: status || 'Pendente',
+                    status: finalStatus,
                     created_at: new Date().toISOString()
                 }]);
                 
@@ -311,6 +389,22 @@
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro: ' + error.message);
+                return false;
+            }
+        }
+
+        async function deleteSale(saleId) {
+            try {
+                const result = await supabase
+                    .from('sales')
+                    .delete()
+                    .eq('id', saleId)
+                    .eq('user_id', currentUser.id);
+                
+                if (result.error) throw result.error;
+                return true;
+            } catch (error) {
+                console.error('Erro:', error);
                 return false;
             }
         }
@@ -327,6 +421,26 @@
             } catch (error) {
                 return [];
             }
+        }
+
+        function filterSalesByPeriod(sales, period) {
+            const now = new Date();
+            const filtered = sales.filter(function(sale) {
+                const saleDate = new Date(sale.created_at);
+                
+                if (period === 'daily') {
+                    return saleDate.toDateString() === now.toDateString();
+                } else if (period === 'weekly') {
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    return saleDate >= weekAgo;
+                } else if (period === 'monthly') {
+                    return saleDate.getMonth() === now.getMonth() && 
+                           saleDate.getFullYear() === now.getFullYear();
+                }
+                return true;
+            });
+            
+            return filtered;
         }
 
         async function updateSaleStatus(saleId, newStatus) {
@@ -398,7 +512,8 @@
         }
 
         async function renderDashboard() {
-            const sales = await getSales();
+            const allSales = await getSales();
+            const sales = filterSalesByPeriod(allSales, selectedPeriod);
             
             const totalSales = sales.length;
             const efetivados = sales.filter(function(s) { return s.status === 'Efetivado'; }).length;
@@ -407,6 +522,8 @@
             const comboSales = sales.filter(function(s) { return s.service_type === 'Combo'; }).length;
             const chipSales = sales.filter(function(s) { return s.service_type === 'BrisaChip'; }).length;
             const fibraSales = sales.filter(function(s) { return s.service_type === 'Fibra'; }).length;
+            
+            const periodText = selectedPeriod === 'daily' ? 'Hoje' : (selectedPeriod === 'weekly' ? 'Esta Semana' : 'Este Mês');
 
             return `
                 <div class="container">
@@ -423,6 +540,15 @@
                                 ${icons.logout}
                                 <span>Sair</span>
                             </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 style="text-align: center; margin-bottom: 15px;">Período: ${periodText}</h2>
+                        <div class="period-selector">
+                            <button class="period-btn ${selectedPeriod === 'daily' ? 'active' : ''}" onclick="changePeriod('daily')">Diário</button>
+                            <button class="period-btn ${selectedPeriod === 'weekly' ? 'active' : ''}" onclick="changePeriod('weekly')">Semanal</button>
+                            <button class="period-btn ${selectedPeriod === 'monthly' ? 'active' : ''}" onclick="changePeriod('monthly')">Mensal</button>
                         </div>
                     </div>
 
@@ -453,7 +579,7 @@
                     <div class="card">
                         <div class="section-header">
                             ${icons.layers}
-                            <h2 style="margin: 0;">Vendas por Tipo de Serviço</h2>
+                            <h2 style="margin: 0;">Vendas por Tipo de Serviço (${periodText})</h2>
                         </div>
                         <div class="grid">
                             <div class="service-stat-card">
@@ -519,7 +645,7 @@
                     <div class="card">
                         <div class="section-header">
                             ${icons.list}
-                            <h2 style="margin: 0;">Histórico de Vendas</h2>
+                            <h2 style="margin: 0;">Histórico de Vendas (${periodText})</h2>
                         </div>
                         ${sales.length > 0 ? `
                             <div style="overflow-x: auto;">
@@ -549,11 +675,13 @@
                                                     </span>
                                                 </td>
                                                 <td>${new Date(sale.created_at).toLocaleDateString('pt-BR')}</td>
-                                                <td>
-                                                    ${sale.status === 'Pendente' 
+                                                <td style="display: flex; gap: 8px;">
+                                                    ${sale.service_type !== 'BrisaChip' ? (
+                                                        sale.status === 'Pendente' 
                                                         ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #28a745;">Efetivar</button>`
-                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a;">Marcar Pendente</button>`
-                                                    }
+                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a;">Pendente</button>`
+                                                    ) : ''}
+                                                    <button onclick="handleDeleteSale('${sale.id}')" class="btn-delete">Excluir</button>
                                                 </td>
                                             </tr>
                                             `;
@@ -564,7 +692,7 @@
                         ` : `
                             <div class="empty-state">
                                 ${icons.inbox}
-                                <p>Nenhuma venda registrada ainda</p>
+                                <p>Nenhuma venda registrada neste período</p>
                             </div>
                         `}
                     </div>
@@ -750,6 +878,20 @@
             if (success) {
                 await changePage('dashboard');
             }
+        }
+
+        async function handleDeleteSale(saleId) {
+            if (confirm('Tem certeza que deseja excluir esta venda?')) {
+                const success = await deleteSale(saleId);
+                if (success) {
+                    await changePage('dashboard');
+                }
+            }
+        }
+
+        function changePeriod(period) {
+            selectedPeriod = period;
+            changePage('dashboard');
         }
 
         async function changePage(page) {
