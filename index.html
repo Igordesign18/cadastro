@@ -395,13 +395,20 @@
 
         async function deleteSale(saleId) {
             try {
+                console.log('Tentando excluir venda:', saleId);
                 const result = await supabase
                     .from('sales')
                     .delete()
                     .eq('id', saleId)
                     .eq('user_id', currentUser.id);
                 
-                if (result.error) throw result.error;
+                if (result.error) {
+                    console.error('Erro ao excluir:', result.error);
+                    alert('Erro ao excluir: ' + result.error.message);
+                    throw result.error;
+                }
+                
+                console.log('Venda excluída com sucesso');
                 return true;
             } catch (error) {
                 console.error('Erro:', error);
