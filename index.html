@@ -896,8 +896,13 @@
         }
 
         async function renderDashboard() {
-            // Verificar se é admin e mostrar botão
+            // Se for admin, redireciona para painel admin
             const isAdmin = currentUser.userData && currentUser.userData.is_admin;
+            
+            if (isAdmin) {
+                currentPage = 'admin';
+                return await renderAdminPage();
+            }
             
             console.log('Renderizando dashboard. É admin?', isAdmin);
             console.log('User data:', currentUser.userData);
