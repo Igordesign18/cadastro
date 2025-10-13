@@ -177,54 +177,7 @@
             position: relative;
             z-index: 1;
         }
-        .datetime-display {
-            background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
-            padding: 15px 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4);
-            margin-bottom: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-        .datetime-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .datetime-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-        }
-        .datetime-icon {
-            opacity: 0.9;
-            width: 18px;
-            height: 18px;
-        }
-        .datetime-label {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            opacity: 0.9;
-        }
-        .datetime-value {
-            font-size: 18px;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .time-separator {
-            font-size: 18px;
-            font-weight: 700;
-            animation: blink 1s infinite;
-        }
-        @keyframes blink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0.3; }
-        }
+
         .btn-apply {
             background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
             color: #fff;
@@ -505,7 +458,7 @@
         let currentPage = 'login';
         let currentUser = null;
         let selectedSaleType = '';
-        let selectedPeriod = 'daily';
+        let selectedPeriod = 'monthly';
         let customStartDate = '';
         let customEndDate = '';
         let selectedPlan = '';
@@ -685,7 +638,11 @@
                     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
                     return saleDate >= weekAgo;
                 } else if (period === 'monthly') {
-                    return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+                    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                    firstDay.setHours(0, 0, 0, 0);
+                    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    lastDay.setHours(23, 59, 59, 999);
+                    return saleDate >= firstDay && saleDate <= lastDay;
                 } else if (period === 'custom') {
                     if (!customStartDate || !customEndDate) return true;
                     const startDate = new Date(customStartDate);
@@ -799,10 +756,15 @@
             const chipSales = sales.filter(s => s.service_type === 'BrisaChip').length;
             const fibraSales = sales.filter(s => s.service_type === 'Fibra').length;
             
+            const now = new Date();
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            const currentMonth = monthNames[now.getMonth()];
+            const currentYear = now.getFullYear();
+            
             let periodText = '';
             if (selectedPeriod === 'daily') periodText = 'Hoje';
             else if (selectedPeriod === 'weekly') periodText = 'Esta Semana';
-            else if (selectedPeriod === 'monthly') periodText = 'Este Mês';
+            else if (selectedPeriod === 'monthly') periodText = `${currentMonth} de ${currentYear}`;
             else if (selectedPeriod === 'custom') {
                 periodText = (customStartDate && customEndDate) 
                     ? formatDateBR(customStartDate) + ' até ' + formatDateBR(customEndDate)
@@ -832,24 +794,6 @@
                                 ${icons.logout}
                                 <span>Sair</span>
                             </button>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="datetime-display">
-                            <div class="datetime-row">
-                                <div class="datetime-item">
-                                    <div class="datetime-icon">${icons.calendar}</div>
-                                    <div class="datetime-label">Data</div>
-                                    <div class="datetime-value" id="currentDate">--/--/----</div>
-                                    <div class="datetime-label" id="currentDay">-----</div>
-                                </div>
-                                <div class="datetime-item">
-                                    <div class="datetime-icon">${icons.clock}</div>
-                                    <div class="datetime-label">Horário de Brasília</div>
-                                    <div class="datetime-value" id="currentTime">--:--:--</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -1331,10 +1275,6 @@
             }
             
             document.getElementById('app').innerHTML = html;
-            
-            if (currentPage === 'dashboard') {
-                updateDateTime();
-            }
         }
 
         async function init() {
