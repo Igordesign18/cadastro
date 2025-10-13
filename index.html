@@ -753,10 +753,13 @@
                                 ${icons.userLg}
                                 <h1>Cadastro de Usuário</h1>
                             </div>
-                            <input type="text" id="fullName" placeholder="Nome Completo">
-                            <input type="email" id="email" placeholder="Email">
-                            <input type="tel" id="phone" placeholder="Telefone" value="55 ">
-                            <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)">
+                            <input type="text" id="fullName" placeholder="Nome Completo" required>
+                            <input type="email" id="email" placeholder="Email" required>
+                            <div class="form-group" style="margin: 10px 0;">
+                                <label class="form-label" style="margin-bottom: 5px;">📱 Telefone (WhatsApp) - Código do país obrigatório</label>
+                                <input type="tel" id="phone" placeholder="Ex: 55 85 98765-4321" value="55 " required style="margin: 0;">
+                            </div>
+                            <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)" required>
                             <button id="btnRegister" onclick="handleRegister()">
                                 ${icons.check}
                                 <span>Cadastrar</span>
@@ -1157,13 +1160,46 @@
             let phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
 
+            // Validação de campos obrigatórios
+            if (!fullName) {
+                alert('O campo Nome Completo é obrigatório!');
+                btn.disabled = false;
+                btn.innerHTML = icons.check + '<span>Cadastrar</span>';
+                return;
+            }
+
+            if (!email) {
+                alert('O campo Email é obrigatório!');
+                btn.disabled = false;
+                btn.innerHTML = icons.check + '<span>Cadastrar</span>';
+                return;
+            }
+
+            // Validação de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Por favor, insira um email válido!');
+                btn.disabled = false;
+                btn.innerHTML = icons.check + '<span>Cadastrar</span>';
+                return;
+            }
+
             // Garantir que o telefone tenha o 55
             if (!phone.startsWith('55')) {
                 phone = '55 ' + phone;
             }
 
-            if (!fullName || !email || !phone || phone === '55' || phone === '55 ' || !password) {
-                alert('Preencha todos os campos!');
+            // Validação de telefone
+            if (!phone || phone === '55' || phone === '55 ' || phone.replace(/\D/g, '').length < 12) {
+                alert('Por favor, insira um número de telefone válido com DDD!\nFormato: 55 85 98765-4321');
+                btn.disabled = false;
+                btn.innerHTML = icons.check + '<span>Cadastrar</span>';
+                return;
+            }
+
+            // Validação de senha
+            if (!password) {
+                alert('O campo Senha é obrigatório!');
                 btn.disabled = false;
                 btn.innerHTML = icons.check + '<span>Cadastrar</span>';
                 return;
