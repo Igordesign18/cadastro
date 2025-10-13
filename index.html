@@ -673,31 +673,17 @@
 
         async function addSale(saleType, customerCPF, quantity, iccid, status, plan) {
             try {
-                // PRIMEIRO: Verificar se o usuário existe na tabela users
-                const { data: userData, error: userCheckError } = await supabase
-                    .from('users')
-                    .select('id')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                // Se não existir, criar o registro primeiro
-                if (userCheckError || !userData) {
-                    console.log('Criando usuário na tabela users...');
-                    const { error: insertUserError } = await supabase.from('users').insert([{
+                // Tentar criar o usuário na tabela users (ignorar se já existir)
+                try {
+                    await supabase.from('users').upsert([{
                         id: currentUser.id,
                         full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
                         email: currentUser.email,
                         phone: currentUser.user_metadata?.phone || '',
                         password: ''
-                    }]);
-                    
-                    if (insertUserError) {
-                        console.error('Erro ao criar usuário:', insertUserError);
-                        throw new Error('Erro ao preparar cadastro. Por favor, faça logout e login novamente.');
-                    }
-                    
-                    // Aguardar um pouco para garantir que foi criado
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    }], { onConflict: 'id' });
+                } catch (upsertError) {
+                    console.log('Usuário já existe ou erro ao criar:', upsertError);
                 }
                 
                 const finalStatus = saleType === 'BrisaChip' ? 'Efetivado' : (status || 'Pendente');
@@ -721,8 +707,8 @@
                 if (result.error) throw result.error;
                 return true;
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro: ' + error.message);
+                console.error('Erro completo:', error);
+                alert('Erro ao registrar venda: ' + error.message);
                 return false;
             }
         }
