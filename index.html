@@ -668,19 +668,17 @@
                         </div>
                         ${selectedPeriod === 'custom' ? `
                             <div class="date-range-selector">
-                                <button onclick="openDatePicker('start')" class="date-selector-btn">
-                                    ${icons.calendar}
-                                    <span>DE: ${customStartDate ? formatDateBR(customStartDate) : 'Selecionar Data'}</span>
-                                </button>
-                                <input type="date" id="startDate" style="display: none;" value="${customStartDate}" onchange="updateCustomDate()">
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label class="form-label" style="color: #ff6b00; text-align: center;">Data Inicial</label>
+                                    <input type="date" id="startDate" class="date-selector-btn" value="${customStartDate}" onchange="updateCustomDate()" style="display: block;">
+                                </div>
                                 
-                                <button onclick="openDatePicker('end')" class="date-selector-btn">
-                                    ${icons.calendar}
-                                    <span>ATÉ: ${customEndDate ? formatDateBR(customEndDate) : 'Selecionar Data'}</span>
-                                </button>
-                                <input type="date" id="endDate" style="display: none;" value="${customEndDate}" onchange="updateCustomDate()">
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label class="form-label" style="color: #ff6b00; text-align: center;">Data Final</label>
+                                    <input type="date" id="endDate" class="date-selector-btn" value="${customEndDate}" onchange="updateCustomDate()" style="display: block;">
+                                </div>
                                 
-                                <button onclick="applyCustomPeriod()" class="btn-apply">Aplicar Período</button>
+                                <button onclick="applyCustomPeriod()" class="btn-apply" style="margin-top: 24px;">Aplicar Período</button>
                             </div>
                         ` : ''}
                     </div>
@@ -1077,24 +1075,6 @@
             const endInput = document.getElementById('endDate');
             if (startInput) customStartDate = startInput.value;
             if (endInput) customEndDate = endInput.value;
-            
-            // Atualizar os botões de seleção de data
-            const startBtn = document.querySelector('.date-selector-btn');
-            const endBtn = document.querySelectorAll('.date-selector-btn')[1];
-            if (startBtn && customStartDate) {
-                startBtn.querySelector('span').textContent = 'DE: ' + formatDateBR(customStartDate);
-            }
-            if (endBtn && customEndDate) {
-                endBtn.querySelector('span').textContent = 'ATÉ: ' + formatDateBR(customEndDate);
-            }
-        }
-
-        function openDatePicker(type) {
-            if (type === 'start') {
-                document.getElementById('startDate').click();
-            } else {
-                document.getElementById('endDate').click();
-            }
         }
 
         function applyCustomPeriod() {
