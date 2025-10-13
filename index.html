@@ -132,67 +132,40 @@
             letter-spacing: 1px;
             text-align: center;
         }
-        .date-input-wrapper {
-            position: relative;
+        .date-button {
             background: #3a3a3a;
-            border-radius: 10px;
-            padding: 15px;
             border: 2px solid #555;
+            color: #fff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
             transition: all 0.3s;
+            font-size: 15px;
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 10px;
+            justify-content: center;
+            min-width: 200px;
+            position: relative;
         }
-        .date-input-wrapper:hover {
+        .date-button:hover {
             border-color: #ff6b00;
             background: #404040;
             box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+            transform: translateY(-2px);
         }
-        .date-input-wrapper input[type="date"] {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 500;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-            cursor: pointer;
-        }
-        .date-input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-            font-size: 18px;
-        }
-        .date-input-wrapper input[type="date"]::-webkit-calendar-picker-indicator:hover {
-            background: rgba(255, 107, 0, 0.2);
-            border-radius: 4px;
-        }
-        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-            padding: 0;
-        }
-        input[type="date"]::-webkit-datetime-edit {
-            padding: 0;
-        }
-        input[type="date"]::-webkit-datetime-edit-text {
-            color: #999;
-            padding: 0 2px;
-        }
-        input[type="date"]::-webkit-datetime-edit-month-field,
-        input[type="date"]::-webkit-datetime-edit-day-field,
-        input[type="date"]::-webkit-datetime-edit-year-field {
-            color: #fff;
-            padding: 2px;
-        }
-        input[type="date"]::-webkit-datetime-edit-month-field:hover,
-        input[type="date"]::-webkit-datetime-edit-day-field:hover,
-        input[type="date"]::-webkit-datetime-edit-year-field:hover {
-            background: rgba(255, 107, 0, 0.2);
-            border-radius: 3px;
-        }
-        .date-icon {
+        .date-button .date-icon {
             color: #ff6b00;
-            flex-shrink: 0;
+        }
+        .date-button input[type="date"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            left: 0;
+            top: 0;
         }
         .datetime-display {
             background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
@@ -882,18 +855,20 @@
                             <div class="date-range-selector">
                                 <div class="date-input-group">
                                     <div class="date-input-label">${icons.calendar} Data Inicial</div>
-                                    <div class="date-input-wrapper">
+                                    <button class="date-button" id="startDateBtn">
                                         <div class="date-icon">${icons.calendar}</div>
-                                        <input type="date" id="startDate" value="${customStartDate}" onchange="updateCustomDate()">
-                                    </div>
+                                        <span id="startDateText">${customStartDate ? formatDateBR(customStartDate) : 'Selecionar Data'}</span>
+                                        <input type="date" id="startDate" value="${customStartDate}" onchange="updateCustomDate('start')">
+                                    </button>
                                 </div>
                                 
                                 <div class="date-input-group">
                                     <div class="date-input-label">${icons.calendar} Data Final</div>
-                                    <div class="date-input-wrapper">
+                                    <button class="date-button" id="endDateBtn">
                                         <div class="date-icon">${icons.calendar}</div>
-                                        <input type="date" id="endDate" value="${customEndDate}" onchange="updateCustomDate()">
-                                    </div>
+                                        <span id="endDateText">${customEndDate ? formatDateBR(customEndDate) : 'Selecionar Data'}</span>
+                                        <input type="date" id="endDate" value="${customEndDate}" onchange="updateCustomDate('end')">
+                                    </button>
                                 </div>
                                 
                                 <button onclick="applyCustomPeriod()" class="btn-apply" style="margin-top: 24px;">
@@ -1287,15 +1262,34 @@
             if (period !== 'custom') {
                 customStartDate = '';
                 customEndDate = '';
+            } else if (period === 'custom' && !customStartDate && !customEndDate) {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                customStartDate = `${year}-${month}-${day}`;
+                customEndDate = `${year}-${month}-${day}`;
             }
             changePage('dashboard');
         }
 
-        function updateCustomDate() {
+        function updateCustomDate(type) {
             const startInput = document.getElementById('startDate');
             const endInput = document.getElementById('endDate');
-            if (startInput) customStartDate = startInput.value;
-            if (endInput) customEndDate = endInput.value;
+            const startText = document.getElementById('startDateText');
+            const endText = document.getElementById('endDateText');
+            
+            if (type === 'start' && startInput) {
+                customStartDate = startInput.value;
+                if (startText && customStartDate) {
+                    startText.textContent = formatDateBR(customStartDate);
+                }
+            } else if (type === 'end' && endInput) {
+                customEndDate = endInput.value;
+                if (endText && customEndDate) {
+                    endText.textContent = formatDateBR(customEndDate);
+                }
+            }
         }
 
         function applyCustomPeriod() {
