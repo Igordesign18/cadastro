@@ -148,6 +148,7 @@
             justify-content: center;
             min-width: 200px;
             position: relative;
+            overflow: hidden;
         }
         .date-button:hover {
             border-color: #ff6b00;
@@ -157,6 +158,9 @@
         }
         .date-button .date-icon {
             color: #ff6b00;
+            pointer-events: none;
+            position: relative;
+            z-index: 1;
         }
         .date-button input[type="date"] {
             position: absolute;
@@ -166,10 +170,12 @@
             cursor: pointer;
             left: 0;
             top: 0;
-            z-index: 10;
+            z-index: 100;
         }
         .date-button span {
             pointer-events: none;
+            position: relative;
+            z-index: 1;
         }
         .datetime-display {
             background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
