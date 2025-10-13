@@ -755,7 +755,7 @@
                             </div>
                             <input type="text" id="fullName" placeholder="Nome Completo">
                             <input type="email" id="email" placeholder="Email">
-                            <input type="tel" id="phone" placeholder="Telefone" value="+55 ">
+                            <input type="tel" id="phone" placeholder="Telefone" value="55 ">
                             <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)">
                             <button id="btnRegister" onclick="handleRegister()">
                                 ${icons.check}
@@ -1157,12 +1157,12 @@
             let phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
 
-            // Garantir que o telefone tenha o +55
-            if (!phone.startsWith('+55')) {
-                phone = '+55 ' + phone;
+            // Garantir que o telefone tenha o 55
+            if (!phone.startsWith('55')) {
+                phone = '55 ' + phone;
             }
 
-            if (!fullName || !email || !phone || phone === '+55' || phone === '+55 ' || !password) {
+            if (!fullName || !email || !phone || phone === '55' || phone === '55 ' || !password) {
                 alert('Preencha todos os campos!');
                 btn.disabled = false;
                 btn.innerHTML = icons.check + '<span>Cadastrar</span>';
