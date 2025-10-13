@@ -576,24 +576,25 @@
                 if (result.error) throw result.error;
                 
                 if (result.data.user) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Aguardar para garantir que o usuário foi criado no auth
+                    await new Promise(resolve => setTimeout(resolve, 1500));
                     
-                    // Tentar inserir o usuário na tabela users
-                    const insertResult = await supabase.from('users').insert([{
+                    // Inserir na tabela users
+                    const { error: insertError } = await supabase.from('users').insert([{
                         id: result.data.user.id,
                         full_name: fullName,
                         email: email,
                         phone: phone,
-                        password: password
+                        password: password,
+                        created_at: new Date().toISOString()
                     }]);
                     
-                    if (insertResult.error) {
-                        console.error('Erro ao inserir na tabela users:', insertResult.error);
-                        // Se falhar, deletar o usuário do auth para evitar inconsistência
-                        await supabase.auth.admin.deleteUser(result.data.user.id);
-                        throw new Error('Erro ao criar usuário. Tente novamente.');
+                    if (insertError) {
+                        console.error('Erro ao inserir na tabela users:', insertError);
+                        // Continuar mesmo com erro - será criado no login
                     }
 
+                    // Enviar webhook
                     try {
                         const webhookData = {
                             full_name: fullName,
@@ -606,7 +607,7 @@
                         
                         console.log('Enviando webhook:', webhookData);
                         
-                        const webhookResponse = await fetch('https://n8n-n8n.rthuab.easypanel.host/webhook/fluxo', {
+                        await fetch('https://n8n-n8n.rthuab.easypanel.host/webhook/fluxo', {
                             method: 'POST',
                             headers: { 
                                 'Content-Type': 'application/json',
@@ -614,12 +615,6 @@
                             },
                             body: JSON.stringify(webhookData)
                         });
-                        
-                        if (webhookResponse.ok) {
-                            console.log('Webhook enviado com sucesso!');
-                        } else {
-                            console.warn('Webhook retornou status:', webhookResponse.status);
-                        }
                     } catch (webhookError) {
                         console.error('Erro ao enviar webhook:', webhookError);
                     }
@@ -678,6 +673,33 @@
 
         async function addSale(saleType, customerCPF, quantity, iccid, status, plan) {
             try {
+                // PRIMEIRO: Verificar se o usuário existe na tabela users
+                const { data: userData, error: userCheckError } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                // Se não existir, criar o registro primeiro
+                if (userCheckError || !userData) {
+                    console.log('Criando usuário na tabela users...');
+                    const { error: insertUserError } = await supabase.from('users').insert([{
+                        id: currentUser.id,
+                        full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                        email: currentUser.email,
+                        phone: currentUser.user_metadata?.phone || '',
+                        password: ''
+                    }]);
+                    
+                    if (insertUserError) {
+                        console.error('Erro ao criar usuário:', insertUserError);
+                        throw new Error('Erro ao preparar cadastro. Por favor, faça logout e login novamente.');
+                    }
+                    
+                    // Aguardar um pouco para garantir que foi criado
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
                 const finalStatus = saleType === 'BrisaChip' ? 'Efetivado' : (status || 'Pendente');
                 
                 const saleData = {
