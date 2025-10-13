@@ -857,13 +857,16 @@
             const allSales = await getSales();
             const sales = filterSalesByPeriod(allSales, selectedPeriod);
             
-            const totalSales = sales.length;
-            const efetivados = sales.filter(s => s.status === 'Efetivado').length;
+            // Contar apenas vendas EFETIVADAS para as estatísticas
+            const efetivadosSales = sales.filter(s => s.status === 'Efetivado');
+            const totalSales = efetivadosSales.length;
+            const efetivados = efetivadosSales.length;
             const pendentes = sales.filter(s => s.status === 'Pendente').length;
             
-            const comboSales = sales.filter(s => s.service_type === 'Combo').length;
-            const chipSales = sales.filter(s => s.service_type === 'BrisaChip').length;
-            const fibraSales = sales.filter(s => s.service_type === 'Fibra').length;
+            // Contar tipos de serviço apenas EFETIVADOS
+            const comboSales = efetivadosSales.filter(s => s.service_type === 'Combo').length;
+            const chipSales = efetivadosSales.filter(s => s.service_type === 'BrisaChip').length;
+            const fibraSales = efetivadosSales.filter(s => s.service_type === 'Fibra').length;
             
             const now = new Date();
             const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1063,10 +1066,10 @@
                                                 <td style="display: flex; gap: 8px; flex-wrap: wrap;">
                                                     ${sale.service_type !== 'BrisaChip' ? (
                                                         sale.status === 'Pendente' 
-                                                        ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #28a745; white-space: nowrap;">Efetivar</button>`
-                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a; white-space: nowrap;">Pendente</button>`
-                                                    ) : ''}
-                                                    <button onclick="handleDeleteSale('${sale.id}')" class="btn-delete" style="white-space: nowrap;">Excluir</button>
+                                                        ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #28a745; white-space: nowrap;">✓ Efetivar</button>`
+                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a; white-space: nowrap;">↶ Pendente</button>`
+                                                    ) : '<span style="color: #28a745; font-size: 12px;">✓ Auto-efetivado</span>'}
+                                                    <button onclick="handleDeleteSale('${sale.id}')" class="btn-delete" style="white-space: nowrap;">🗑 Excluir</button>
                                                 </td>
                                             </tr>
                                         `).join('')}
@@ -1356,9 +1359,25 @@
         }
 
         async function toggleStatus(saleId, newStatus) {
-            const success = await updateSaleStatus(saleId, newStatus);
-            if (success) {
+            if (!saleId) {
+                alert('Erro: ID da venda inválido');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('sales')
+                    .update({ status: newStatus })
+                    .eq('id', saleId)
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                alert(`Venda ${newStatus === 'Efetivado' ? 'efetivada' : 'marcada como pendente'} com sucesso!`);
                 await changePage('dashboard');
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+                alert('Erro ao atualizar status: ' + error.message);
             }
         }
 
