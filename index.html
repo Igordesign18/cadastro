@@ -439,10 +439,60 @@
             text-transform: uppercase;
         }
         @media (max-width: 768px) {
-            .grid { grid-template-columns: 1fr; }
+            .container { padding: 10px; }
+            .card { padding: 20px; margin-bottom: 15px; }
+            .grid { grid-template-columns: 1fr; gap: 10px; }
             .stat-value { font-size: 28px; }
-            h1 { font-size: 24px; }
-            h2 { font-size: 20px; }
+            .service-stat-value { font-size: 32px; }
+            h1 { font-size: 20px; }
+            h2 { font-size: 18px; }
+            .system-title h1 { font-size: 24px; gap: 10px; }
+            .system-title .subtitle { font-size: 12px; }
+            .system-title { padding: 20px; margin-bottom: 20px; }
+            .flex-between { flex-direction: column; align-items: flex-start; }
+            .section-header { flex-wrap: wrap; gap: 8px; }
+            .period-selector { gap: 8px; }
+            .period-btn { padding: 8px 16px; font-size: 13px; }
+            .sale-type-selector { grid-template-columns: 1fr; gap: 10px; }
+            .sale-type-card { padding: 15px; }
+            .plan-selector { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+            .plan-gb { font-size: 20px; }
+            .plan-price { font-size: 14px; }
+            .date-range-selector { padding: 20px; gap: 10px; flex-direction: column; }
+            .date-input-group { min-width: 100%; width: 100%; }
+            .date-button { min-width: 100%; width: 100%; padding: 12px 15px; font-size: 14px; }
+            .btn-apply { width: 100%; padding: 12px; margin-top: 10px !important; }
+            table { font-size: 12px; }
+            th, td { padding: 10px 8px; }
+            th { font-size: 11px; }
+            .status-badge { font-size: 10px; padding: 4px 8px; }
+            button { font-size: 13px; padding: 10px; }
+            .btn-delete { padding: 6px 12px; font-size: 11px; }
+            .service-stat-header { flex-direction: column; text-align: center; gap: 8px; }
+            .service-stat-header span { font-size: 13px; }
+            .form-group { margin-bottom: 10px; }
+            input, select { font-size: 16px; padding: 12px; }
+            .stat-card { padding: 20px; }
+            .stat-card-header { font-size: 13px; }
+            .service-stat-card { padding: 20px; }
+            .icon-xl { width: 24px; height: 24px; }
+            .icon-lg { width: 20px; height: 20px; }
+            .empty-state { padding: 40px 15px; font-size: 14px; }
+            .footer-credits { font-size: 12px; padding: 15px; }
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 18px; }
+            h2 { font-size: 16px; }
+            .system-title h1 { font-size: 20px; }
+            .stat-value { font-size: 24px; }
+            .service-stat-value { font-size: 28px; }
+            .period-btn { padding: 8px 12px; font-size: 12px; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .date-input-label { font-size: 11px; }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .container { padding: 15px; }
         }
     </style>
 </head>
@@ -951,13 +1001,13 @@
                                                     </span>
                                                 </td>
                                                 <td>${formatDateBR(sale.created_at)}</td>
-                                                <td style="display: flex; gap: 8px;">
+                                                <td style="display: flex; gap: 8px; flex-wrap: wrap;">
                                                     ${sale.service_type !== 'BrisaChip' ? (
                                                         sale.status === 'Pendente' 
-                                                        ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #28a745;">Efetivar</button>`
-                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a;">Pendente</button>`
+                                                        ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #28a745; white-space: nowrap;">Efetivar</button>`
+                                                        : `<button onclick="toggleStatus('${sale.id}', 'Pendente')" style="width: auto; padding: 8px 16px; font-size: 12px; background: #ffc107; color: #1a1a1a; white-space: nowrap;">Pendente</button>`
                                                     ) : ''}
-                                                    <button onclick="handleDeleteSale('${sale.id}')" class="btn-delete">Excluir</button>
+                                                    <button onclick="handleDeleteSale('${sale.id}')" class="btn-delete" style="white-space: nowrap;">Excluir</button>
                                                 </td>
                                             </tr>
                                         `).join('')}
