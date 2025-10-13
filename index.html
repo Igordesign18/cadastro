@@ -1077,7 +1077,16 @@
             const endInput = document.getElementById('endDate');
             if (startInput) customStartDate = startInput.value;
             if (endInput) customEndDate = endInput.value;
-            changePage('dashboard');
+            
+            // Atualizar os botões de seleção de data
+            const startBtn = document.querySelector('.date-selector-btn');
+            const endBtn = document.querySelectorAll('.date-selector-btn')[1];
+            if (startBtn && customStartDate) {
+                startBtn.querySelector('span').textContent = 'DE: ' + formatDateBR(customStartDate);
+            }
+            if (endBtn && customEndDate) {
+                endBtn.querySelector('span').textContent = 'ATÉ: ' + formatDateBR(customEndDate);
+            }
         }
 
         function openDatePicker(type) {
