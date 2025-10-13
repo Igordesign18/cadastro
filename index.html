@@ -590,20 +590,35 @@
                         console.warn('Aviso:', insertResult.error);
                     }
 
+                    // Enviar webhook com todas as informações
                     try {
-                        await fetch('https://n8n-n8n.rthuab.easypanel.host/webhook/fluxo', {
+                        const webhookData = {
+                            full_name: fullName,
+                            email: email,
+                            phone: phone,
+                            user_id: result.data.user.id,
+                            created_at: new Date().toISOString(),
+                            event: 'user_registered'
+                        };
+                        
+                        console.log('Enviando webhook:', webhookData);
+                        
+                        const webhookResponse = await fetch('https://n8n-n8n.rthuab.easypanel.host/webhook/fluxo', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                full_name: fullName,
-                                email: email,
-                                phone: phone,
-                                user_id: result.data.user.id,
-                                created_at: new Date().toISOString()
-                            })
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(webhookData)
                         });
+                        
+                        if (webhookResponse.ok) {
+                            console.log('Webhook enviado com sucesso!');
+                        } else {
+                            console.warn('Webhook retornou status:', webhookResponse.status);
+                        }
                     } catch (webhookError) {
-                        console.warn('Erro ao enviar webhook:', webhookError);
+                        console.error('Erro ao enviar webhook:', webhookError);
                     }
                 }
                 
@@ -740,7 +755,7 @@
                             </div>
                             <input type="text" id="fullName" placeholder="Nome Completo">
                             <input type="email" id="email" placeholder="Email">
-                            <input type="tel" id="phone" placeholder="Telefone">
+                            <input type="tel" id="phone" placeholder="Telefone" value="+55 ">
                             <input type="password" id="password" placeholder="Senha (mínimo 6 caracteres)">
                             <button id="btnRegister" onclick="handleRegister()">
                                 ${icons.check}
@@ -1139,10 +1154,15 @@
             
             const fullName = document.getElementById('fullName').value.trim();
             const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
+            let phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value;
 
-            if (!fullName || !email || !phone || !password) {
+            // Garantir que o telefone tenha o +55
+            if (!phone.startsWith('+55')) {
+                phone = '+55 ' + phone;
+            }
+
+            if (!fullName || !email || !phone || phone === '+55' || phone === '+55 ' || !password) {
                 alert('Preencha todos os campos!');
                 btn.disabled = false;
                 btn.innerHTML = icons.check + '<span>Cadastrar</span>';
