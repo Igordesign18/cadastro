@@ -17,7 +17,7 @@
             overflow-x: hidden;
         }
         
-        /*  Added animated background effects */
+        /* Added animated background effects */
         .bg-effects {
             position: fixed;
             top: 0;
@@ -287,7 +287,7 @@
         }
         .service-stat-card {
             background: linear-gradient(135deg, #3a3a3a 0%, #454545 100%);
-            padding: 25px;
+            padding: 25px; 
             border-radius: 12px;
             border: 2px solid #ff6b00;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -314,7 +314,7 @@
             font-size: 13px;
         }
         
-        /*  Added calendar styles */
+        /* Added calendar styles */
         .calendar-container {
             background: #2a2a2a;
             border-radius: 12px;
@@ -465,6 +465,140 @@
             color: #999;
             margin-top: 5px;
             text-align: center;
+        }
+        
+        /* Added modal styles for calendar date details */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 2px solid #ff6b00;
+            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ff6b00;
+        }
+        
+        .modal-header h2 {
+            color: #ff6b00;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .modal-close {
+            background: #dc3545;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            padding: 0;
+        }
+        
+        .modal-close:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+        
+        .modal-sale-card {
+            background: #3a3a3a;
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .modal-sale-card:hover {
+            border-color: #ff6b00;
+            background: #404040;
+        }
+        
+        .modal-sale-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .modal-sale-type {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ff6b00;
+        }
+        
+        .modal-sale-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .modal-sale-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .modal-sale-label {
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .modal-sale-value {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .modal-empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
         }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -739,7 +873,7 @@
     </style>
 </head>
 <body>
-    <!--  Added animated background effects -->
+    <!-- Added animated background effects -->
     <div class="bg-effects">
         <div class="grid-pattern"></div>
         <div class="floating-shape shape-1"></div>
@@ -762,9 +896,9 @@
         let customStartDate = '';
         let customEndDate = '';
         let selectedPlan = '';
-        //  Added calendar state variables
         let calendarMonth = new Date().getMonth();
         let calendarYear = new Date().getFullYear();
+        let modalOpen = false;
 
         const icons = {
             user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
@@ -918,7 +1052,7 @@
             currentUser = null;
         }
 
-        //  Made CPF optional and added plan parameter
+        // Made CPF optional and added plan parameter
         async function addSale(saleType, customerCPF, quantity, iccid, status, plan) {
             try {
                 try {
@@ -1025,20 +1159,128 @@
             }
         }
 
-        //  Added calendar navigation functions
-        function changeCalendarMonth(direction) {
-            calendarMonth += direction;
-            if (calendarMonth > 11) {
-                calendarMonth = 0;
-                calendarYear++;
-            } else if (calendarMonth < 0) {
-                calendarMonth = 11;
-                calendarYear--;
+        function showDateSales(year, month, day) {
+            const dateKey = `${year}-${month}-${day}`;
+            
+            getSales().then(allSales => {
+                const dateSales = allSales.filter(sale => {
+                    const saleDate = new Date(sale.created_at);
+                    return saleDate.getFullYear() === year && 
+                           saleDate.getMonth() === month && 
+                           saleDate.getDate() === day;
+                });
+                
+                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                                  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                const weekDays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 
+                                'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                
+                const date = new Date(year, month, day);
+                const dayName = weekDays[date.getDay()];
+                const dateStr = `${dayName}, ${day} de ${monthNames[month]} de ${year}`;
+                
+                let modalHTML = `
+                    <div class="modal-overlay" onclick="closeModal(event)">
+                        <div class="modal-content" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <h2>${dateStr}</h2>
+                                <button class="modal-close" onclick="closeModal()">×</button>
+                            </div>
+                `;
+                
+                if (dateSales.length === 0) {
+                    modalHTML += `
+                        <div class="modal-empty">
+                            ${icons.inbox}
+                            <p style="margin-top: 15px;">Nenhuma venda registrada nesta data</p>
+                        </div>
+                    `;
+                } else {
+                    dateSales.forEach(sale => {
+                        const saleTime = new Date(sale.created_at).toLocaleTimeString('pt-BR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        
+                        modalHTML += `
+                            <div class="modal-sale-card">
+                                <div class="modal-sale-header">
+                                    <div class="modal-sale-type">${sale.service_type}</div>
+                                    <span class="status-badge status-${sale.status.toLowerCase()}">${sale.status}</span>
+                                </div>
+                                
+                                <div class="modal-sale-info">
+                                    ${sale.plan ? `
+                                        <div class="modal-sale-field">
+                                            <div class="modal-sale-label">Plano</div>
+                                            <div class="modal-sale-value">${sale.plan}</div>
+                                        </div>
+                                    ` : ''}
+                                    <div class="modal-sale-field">
+                                        <div class="modal-sale-label">CPF do Cliente</div>
+                                        <div class="modal-sale-value">${sale.customer_cpf || 'Não informado'}</div>
+                                    </div>
+                                    <div class="modal-sale-field">
+                                        <div class="modal-sale-label">Quantidade</div>
+                                        <div class="modal-sale-value">${sale.quantity}</div>
+                                    </div>
+                                    ${sale.iccid ? `
+                                        <div class="modal-sale-field">
+                                            <div class="modal-sale-label">ICCID</div>
+                                            <div class="modal-sale-value">${sale.iccid}</div>
+                                        </div>
+                                    ` : ''}
+                                    <div class="modal-sale-field">
+                                        <div class="modal-sale-label">Horário</div>
+                                        <div class="modal-sale-value">${saleTime}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="modal-actions">
+                                    ${sale.status === 'Pendente' ? `
+                                        <button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="background: #28a745; width: auto; padding: 10px 20px;">
+                                            ${icons.check}
+                                            <span>Efetivar</span>
+                                        </button>
+                                    ` : `
+                                        <button onclick="toggleStatus('${sale.id}', 'Pendente')" style="background: #ffc107; width: auto; padding: 10px 20px;">
+                                            ${icons.clock}
+                                            <span>Marcar como Pendente</span>
+                                        </button>
+                                    `}
+                                    <button class="btn-delete" onclick="handleDeleteSale('${sale.id}')">
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                modalHTML += `
+                        </div>
+                    </div>
+                `;
+                
+                const modalContainer = document.createElement('div');
+                modalContainer.id = 'salesModal';
+                modalContainer.innerHTML = modalHTML;
+                document.body.appendChild(modalContainer);
+                modalOpen = true;
+            });
+        }
+        
+        function closeModal(event) {
+            if (event && event.target.classList.contains('modal-content')) {
+                return;
             }
-            changePage('dashboard');
+            const modal = document.getElementById('salesModal');
+            if (modal) {
+                modal.remove();
+            }
+            modalOpen = false;
         }
 
-        //  Added function to render calendar
         function renderCalendar(sales) {
             const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                               'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -1103,7 +1345,7 @@
                 if (hasSales) dayClasses += ' has-sales';
                 
                 calendarHTML += `
-                    <div class="${dayClasses}">
+                    <div class="${dayClasses}" onclick="showDateSales(${calendarYear}, ${calendarMonth}, ${day})">
                         <div class="calendar-day-number">${day}</div>
                         <div class="calendar-day-sales">
                             ${daySales.slice(0, 3).map(sale => `
@@ -1425,7 +1667,7 @@
             }
         }
 
-        //  Updated form to include plan field and make CPF optional
+        // Updated form to include plan field and make CPF optional
         function renderSaleForm() {
             const formContainer = document.getElementById('saleForm');
             if (!formContainer) return;
@@ -1627,7 +1869,7 @@
             }
         }
 
-        //  Updated to handle optional plan field
+        // Updated to handle optional plan field
         async function handleAddSale() {
             const cpfInput = document.getElementById('customerCPF');
             const quantityInput = document.getElementById('quantity');
