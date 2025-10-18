@@ -807,6 +807,8 @@
             letter-spacing: 1px;
             text-transform: uppercase;
         }
+
+        /* Enhanced mobile responsiveness for calendar */
         @media (max-width: 768px) {
             .container { padding: 10px; }
             .card { padding: 20px; margin-bottom: 15px; }
@@ -848,12 +850,69 @@
             .icon-lg { width: 20px; height: 20px; }
             .empty-state { padding: 40px 15px; font-size: 14px; }
             .footer-credits { font-size: 12px; padding: 15px; }
-            .calendar-days { gap: 3px; }
-            .calendar-day { min-height: 80px; padding: 5px; }
-            .calendar-day-number { font-size: 12px; }
-            .calendar-sale-item { font-size: 9px; padding: 3px 4px; }
-            .calendar-header h3 { font-size: 16px; }
+            
+            /* Better mobile calendar layout */
+            .calendar-container { padding: 10px; }
+            .calendar-header { padding: 10px; flex-wrap: wrap; }
+            .calendar-header h3 { font-size: 16px; width: 100%; text-align: center; margin-bottom: 10px; }
+            .calendar-nav { width: 100%; justify-content: center; }
+            .calendar-nav-btn { width: 50px; height: 50px; font-size: 20px; }
+            .calendar-days { gap: 2px; }
+            .calendar-day { 
+                min-height: 70px; 
+                padding: 4px; 
+                border-width: 1px;
+            }
+            .calendar-day-number { font-size: 11px; }
+            .calendar-sale-item { 
+                font-size: 8px; 
+                padding: 2px 3px;
+                margin-bottom: 2px;
+            }
+            .calendar-day-count { font-size: 9px; margin-top: 3px; }
+            .calendar-weekday { font-size: 10px; padding: 5px 2px; }
+            
+            /* Full-screen modal on mobile */
+            .modal-overlay { padding: 0; }
+            .modal-content {
+                max-width: 100%;
+                width: 100%;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                padding: 20px;
+                margin: 0;
+            }
+            .modal-header { 
+                padding-bottom: 10px; 
+                margin-bottom: 15px;
+                position: sticky;
+                top: 0;
+                background: #2a2a2a;
+                z-index: 10;
+            }
+            .modal-header h2 { font-size: 18px; }
+            .modal-close { width: 35px; height: 35px; font-size: 20px; }
+            .modal-sale-card { padding: 15px; margin-bottom: 12px; }
+            .modal-sale-type { font-size: 16px; }
+            .modal-sale-info { 
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .modal-sale-label { font-size: 11px; }
+            .modal-sale-value { font-size: 13px; }
+            .modal-actions { 
+                flex-direction: column;
+                gap: 8px;
+            }
+            .modal-actions button {
+                width: 100% !important;
+                padding: 12px !important;
+            }
+            .modal-empty { padding: 30px 15px; font-size: 14px; }
         }
+        
+        /* Extra small mobile devices */
         @media (max-width: 480px) {
             h1 { font-size: 18px; }
             h2 { font-size: 16px; }
@@ -863,12 +922,40 @@
             .period-btn { padding: 8px 12px; font-size: 12px; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
             .date-input-label { font-size: 11px; }
-            .calendar-day { min-height: 60px; }
-            .calendar-weekday { font-size: 10px; padding: 5px; }
+            
+            /* Smaller calendar for very small screens */
+            .calendar-day { 
+                min-height: 60px; 
+                padding: 3px;
+            }
+            .calendar-day-number { font-size: 10px; }
+            .calendar-sale-item { 
+                font-size: 7px; 
+                padding: 2px;
+            }
+            .calendar-weekday { font-size: 9px; padding: 4px 1px; }
+            .calendar-day-count { font-size: 8px; }
+            .calendar-nav-btn { width: 45px; height: 45px; font-size: 18px; }
         }
+        
+        /* Tablet landscape optimization */
         @media (min-width: 769px) and (max-width: 1024px) {
             .grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
             .container { padding: 15px; }
+            .calendar-day { min-height: 90px; }
+            .modal-content { max-width: 90%; }
+        }
+        
+        /* Better touch targets for all devices */
+        @media (hover: none) and (pointer: coarse) {
+            button, .calendar-day, .period-btn, .sale-type-card, .plan-card {
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+            .calendar-nav-btn {
+                min-width: 44px;
+                min-height: 44px;
+            }
         }
     </style>
 </head>
@@ -1641,33 +1728,6 @@
             `;
         }
 
-        function selectSaleType(type) {
-            selectedSaleType = type;
-            selectedPlan = '';
-            
-            const cards = document.querySelectorAll('.sale-type-card');
-            cards.forEach(card => card.classList.remove('active'));
-            
-            event.target.closest('.sale-type-card').classList.add('active');
-            
-            renderSaleForm();
-        }
-
-        function selectPlan(plan) {
-            selectedPlan = plan;
-            
-            const planCards = document.querySelectorAll('.plan-card');
-            planCards.forEach(card => card.classList.remove('active'));
-            
-            if (event && event.target) {
-                const clickedCard = event.target.closest('.plan-card');
-                if (clickedCard) {
-                    clickedCard.classList.add('active');
-                }
-            }
-        }
-
-        // Updated form to include plan field and make CPF optional
         function renderSaleForm() {
             const formContainer = document.getElementById('saleForm');
             if (!formContainer) return;
