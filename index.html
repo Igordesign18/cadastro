@@ -663,7 +663,7 @@
         let customStartDate = '';
         let customEndDate = '';
         let selectedPlan = '';
-        let collapsedDates = new Set(); //  Controlar quais datas estão recolhidas
+        let collapsedDates = new Set();
 
         const icons = {
             user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
@@ -818,7 +818,6 @@
             currentUser = null;
         }
 
-        //  Modificado para aceitar CPF opcional e campo de plano
         async function addSale(saleType, customerCPF, quantity, iccid, status, plan, customPlan) {
             try {
                 try {
@@ -916,10 +915,9 @@
             return date.toLocaleDateString('pt-BR');
         }
 
-        //  Nova função para formatar data completa com dia da semana em português
         function formatFullDateBR(dateString) {
             if (!dateString) return '';
-            const date = new Date(dateString);
+            const date = new Date(dateString + 'T00:00:00');
             const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
             const weekday = weekdays[date.getDay()];
             const day = date.getDate();
@@ -930,7 +928,6 @@
             return `${weekday}, ${day} de ${month} de ${year}`;
         }
 
-        //  Nova função para agrupar vendas por data
         function groupSalesByDate(sales) {
             const grouped = {};
             
@@ -947,7 +944,6 @@
             return grouped;
         }
 
-        //  Nova função para alternar expansão/recolhimento de grupo de data
         function toggleDateGroup(dateKey) {
             if (collapsedDates.has(dateKey)) {
                 collapsedDates.delete(dateKey);
@@ -1078,7 +1074,6 @@
                     : 'Período Personalizado';
             }
 
-            //  Agrupar vendas por data
             const salesByDate = groupSalesByDate(sales);
             const sortedDates = Object.keys(salesByDate).sort((a, b) => new Date(b) - new Date(a));
 
@@ -1348,7 +1343,6 @@
             let formHTML = '';
 
             if (selectedSaleType === 'Combo') {
-                //  Adicionado campo de plano opcional para Combo
                 formHTML = `
                     <div class="form-group">
                         <label class="form-label">Plano (Opcional)</label>
@@ -1415,7 +1409,6 @@
                     </button>
                 `;
             } else if (selectedSaleType === 'Fibra') {
-                //  Adicionado campo de plano opcional para Fibra
                 formHTML = `
                     <div class="form-group">
                         <label class="form-label">Plano (Opcional)</label>
@@ -1546,7 +1539,6 @@
             }
         }
 
-        //  Modificado para aceitar campo de plano personalizado
         async function handleAddSale() {
             const cpfInput = document.getElementById('customerCPF');
             const quantityInput = document.getElementById('quantity');
