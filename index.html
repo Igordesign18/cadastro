@@ -1560,6 +1560,16 @@
         let collapsedDates = new Set();
         let isDarkTheme = true;
 
+        // Função para obter data/hora atual no horário de Brasília
+        function getBrasiliaDateTime() {
+            // Obtém a data/hora atual no fuso de Brasília
+            const brasiliaDate = new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+            // Converte para objeto Date
+            const date = new Date(brasiliaDate);
+            // Retorna em formato ISO
+            return date.toISOString();
+        }
+
         const icons = {
             user: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
             userLg: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
@@ -1627,7 +1637,7 @@
                         email: email,
                         phone: phone,
                         password: password,
-                        created_at: new Date().toISOString()
+                        created_at: getBrasiliaDateTime()
                     }]);
                     
                     if (insertError) {
@@ -1640,7 +1650,7 @@
                             email: email,
                             phone: phone,
                             user_id: result.data.user.id,
-                            created_at: new Date().toISOString(),
+                            created_at: getBrasiliaDateTime(),
                             event: 'user_registered'
                         };
                         
@@ -1728,7 +1738,7 @@
                     quantity: parseInt(quantity),
                     iccid: iccid || null,
                     status: finalStatus,
-                    created_at: new Date().toISOString()
+                    created_at: getBrasiliaDateTime()
                 };
                 
                 if (plan) {
