@@ -1562,12 +1562,30 @@
 
         // Função para obter data/hora atual no horário de Brasília
         function getBrasiliaDateTime() {
-            // Obtém a data/hora atual no fuso de Brasília
-            const brasiliaDate = new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
-            // Converte para objeto Date
-            const date = new Date(brasiliaDate);
-            // Retorna em formato ISO
-            return date.toISOString();
+            // Obtém a data/hora atual em Brasília usando Intl
+            const formatter = new Intl.DateTimeFormat('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            const parts = formatter.formatToParts(new Date());
+            const partsMap = {};
+            parts.forEach(part => {
+                if (part.type !== 'literal') {
+                    partsMap[part.type] = part.value;
+                }
+            });
+            
+            // Monta a string ISO no formato correto
+            const isoString = `${partsMap.year}-${partsMap.month}-${partsMap.day}T${partsMap.hour}:${partsMap.minute}:${partsMap.second}-03:00`;
+            
+            return isoString;
         }
 
         const icons = {
