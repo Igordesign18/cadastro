@@ -2268,6 +2268,9 @@
 
         function handleSearch(value) {
             searchTerm = value;
+        }
+        
+        function executeSearch() {
             changePage('dashboard');
         }
 
@@ -2277,10 +2280,22 @@
                 return;
             }
 
-            // Criar cabeçalho
-            let csv = 'Data,Hora,Tipo de Serviço,CPF,Quantidade,ICCID,Plano,Status\n';
+            // Separador de CSV (ponto e vírgula para Excel brasileiro)
+            const sep = ';';
             
-            // Adicionar dados
+            // Cabeçalho com BOM para UTF-8 e formatação Excel
+            let csv = '\uFEFF';
+            
+            // Título do relatório
+            csv += `RELATÓRIO DE VENDAS BRISANET${sep}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            csv += `Gerado em: ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}${sep}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            csv += `Total de vendas: ${sales.length}${sep}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            csv += `${sep}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            
+            // Cabeçalhos da tabela
+            csv += `DATA${sep}HORA${sep}TIPO DE SERVIÇO${sep}CPF DO CLIENTE${sep}QUANTIDADE${sep}ICCID${sep}PLANO${sep}STATUS\n`;
+            
+            // Dados
             sales.forEach(sale => {
                 const date = new Date(sale.created_at);
                 const dateStr = date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
@@ -2290,16 +2305,24 @@
                     timeZone: 'America/Sao_Paulo'
                 });
                 
-                csv += `${dateStr},${timeStr},${sale.service_type},${sale.customer_cpf},${sale.quantity},${sale.iccid || '-'},${sale.plan || '-'},${sale.status}\n`;
+                csv += `${dateStr}${sep}${timeStr}${sep}${sale.service_type}${sep}${sale.customer_cpf}${sep}${sale.quantity}${sep}${sale.iccid || '-'}${sep}${sale.plan || '-'}${sep}${sale.status}\n`;
             });
             
+            // Rodapé com resumo
+            csv += `${sep}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            const efetivados = sales.filter(s => s.status === 'Efetivado').length;
+            const pendentes = sales.filter(s => s.status === 'Pendente').length;
+            csv += `RESUMO:${sep}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            csv += `Efetivados:${sep}${efetivados}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            csv += `Pendentes:${sep}${pendentes}${sep}${sep}${sep}${sep}${sep}${sep}\n`;
+            
             // Criar blob e fazer download
-            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             
             const now = new Date();
-            const fileName = `vendas_brisanet_${now.toLocaleDateString('pt-BR').replace(/\//g, '-')}.csv`;
+            const fileName = `relatorio_vendas_brisanet_${now.toLocaleDateString('pt-BR').replace(/\//g, '-')}_${now.toLocaleTimeString('pt-BR').replace(/:/g, '-')}.csv`;
             
             link.setAttribute('href', url);
             link.setAttribute('download', fileName);
@@ -2308,7 +2331,7 @@
             link.click();
             document.body.removeChild(link);
             
-            alert(`Relatório exportado com sucesso!\nTotal de ${sales.length} ${sales.length === 1 ? 'venda' : 'vendas'} exportadas.`);
+            alert(`✅ Relatório exportado com sucesso!\n\n📊 ${sales.length} ${sales.length === 1 ? 'venda' : 'vendas'} exportadas\n✓ ${efetivados} efetivadas\n⏳ ${pendentes} pendentes`);
         }
 
         function toggleDateGroup(dateKey) {
@@ -2594,21 +2617,32 @@
                         </div>
                         
                         <div class="search-export-container" style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 250px; position: relative;">
-                                <div style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5;">
-                                    ${icons.search}
+                            <div style="flex: 1; min-width: 250px; position: relative; display: flex; gap: 8px;">
+                                <div style="flex: 1; position: relative;">
+                                    <div style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5;">
+                                        ${icons.search}
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        id="searchInput"
+                                        placeholder="Buscar por CPF, ICCID, plano..." 
+                                        value="${searchTerm}"
+                                        oninput="handleSearch(this.value)"
+                                        onkeypress="if(event.key==='Enter') executeSearch()"
+                                        style="padding-left: 45px; margin: 0;"
+                                    >
                                 </div>
-                                <input 
-                                    type="text" 
-                                    placeholder="Buscar por CPF, ICCID, plano..." 
-                                    value="${searchTerm}"
-                                    oninput="handleSearch(this.value)"
-                                    style="padding-left: 45px; margin: 0;"
+                                <button 
+                                    onclick="executeSearch()"
+                                    style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); padding: 14px 24px; white-space: nowrap; width: auto; margin: 0;"
                                 >
+                                    ${icons.search}
+                                    <span>Buscar</span>
+                                </button>
                             </div>
                             <button 
                                 onclick="exportToExcel(${JSON.stringify(sales).replace(/"/g, '&quot;')})"
-                                style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 14px 24px; white-space: nowrap; display: flex; align-items: center; gap: 8px;"
+                                style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 14px 24px; white-space: nowrap; display: flex; align-items: center; gap: 8px; width: auto; margin: 0;"
                             >
                                 ${icons.download}
                                 <span>Exportar Excel</span>
@@ -2619,7 +2653,7 @@
                             <div style="background: rgba(255, 107, 0, 0.1); border: 1px solid rgba(255, 107, 0, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                                 ${icons.search}
                                 <span>Mostrando ${filteredSales.length} de ${sales.length} vendas para "${searchTerm}"</span>
-                                <button onclick="handleSearch('')" style="margin-left: auto; padding: 6px 12px; background: rgba(255, 107, 0, 0.2); border: 1px solid rgba(255, 107, 0, 0.4);">
+                                <button onclick="searchTerm=''; document.getElementById('searchInput').value=''; executeSearch();" style="margin-left: auto; padding: 6px 12px; background: rgba(255, 107, 0, 0.2); border: 1px solid rgba(255, 107, 0, 0.4); margin: 0;">
                                     ${icons.x} Limpar
                                 </button>
                             </div>
@@ -3048,6 +3082,20 @@
                 return;
             }
             
+            // Mostrar informações atuais
+            const saleDate = new Date(sale.created_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const info = `📝 INFORMAÇÕES ATUAIS DA VENDA:\n\n` +
+                        `📅 Data/Hora: ${saleDate}\n` +
+                        `🏷️ Tipo: ${sale.service_type}\n` +
+                        `👤 CPF: ${sale.customer_cpf}\n` +
+                        `📦 Quantidade: ${sale.quantity}\n` +
+                        `📱 ICCID: ${sale.iccid || 'Não informado'}\n` +
+                        `📋 Plano: ${sale.plan || 'Não informado'}\n` +
+                        `✅ Status: ${sale.status}\n\n` +
+                        `Agora você pode editar os campos abaixo.`;
+            
+            alert(info);
+            
             editingSaleId = saleId;
             selectedSaleType = sale.service_type;
             selectedPlan = sale.plan || '';
@@ -3067,6 +3115,17 @@
                 if (iccidInput) iccidInput.value = sale.iccid || '';
                 if (statusInput) statusInput.value = sale.status;
                 if (customPlanInput && !selectedPlan) customPlanInput.value = sale.plan || '';
+                
+                // Marcar o plano correto se for BrisaChip
+                if (selectedPlan) {
+                    const planCards = document.querySelectorAll('.plan-card');
+                    planCards.forEach(card => {
+                        const cardText = card.textContent.trim();
+                        if (cardText.includes(selectedPlan.split(' - ')[0])) {
+                            card.classList.add('active');
+                        }
+                    });
+                }
                 
                 // Rolar para o formulário
                 document.getElementById('saleForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
