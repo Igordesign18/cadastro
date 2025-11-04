@@ -1280,6 +1280,24 @@
             animation-delay: 0.4s;
         }
         
+        /* Estilo do campo de busca com ícone */
+        .search-container {
+            position: relative;
+        }
+        
+        .search-container input {
+            padding-left: 45px;
+        }
+        
+        .search-container .icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        
         #saleForm > *:nth-child(5) {
             animation-delay: 0.5s;
         }
@@ -1559,6 +1577,8 @@
         let selectedPlan = '';
         let collapsedDates = new Set();
         let isDarkTheme = true;
+        let searchTerm = '';
+        let editingSaleId = null;
 
         // Função para obter data/hora atual no horário de Brasília
         function getBrasiliaDateTime() {
@@ -1609,7 +1629,11 @@
             trendingUp: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>',
             arrowRight: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>',
             sun: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>',
-            moon: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>'
+            moon: '<svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>',
+            search: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+            download: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>',
+            edit: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
+            x: '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
         };
 
         function toggleTheme() {
@@ -1875,6 +1899,68 @@
             return grouped;
         }
 
+        function filterSalesBySearch(sales) {
+            if (!searchTerm || searchTerm.trim() === '') {
+                return sales;
+            }
+            
+            const term = searchTerm.toLowerCase().trim();
+            return sales.filter(sale => {
+                return (
+                    sale.service_type.toLowerCase().includes(term) ||
+                    sale.customer_cpf.toLowerCase().includes(term) ||
+                    (sale.iccid && sale.iccid.toLowerCase().includes(term)) ||
+                    (sale.plan && sale.plan.toLowerCase().includes(term)) ||
+                    sale.status.toLowerCase().includes(term)
+                );
+            });
+        }
+
+        function handleSearch(value) {
+            searchTerm = value;
+            changePage('dashboard');
+        }
+
+        function exportToExcel(sales) {
+            if (sales.length === 0) {
+                alert('Não há vendas para exportar!');
+                return;
+            }
+
+            // Criar cabeçalho
+            let csv = 'Data,Hora,Tipo de Serviço,CPF,Quantidade,ICCID,Plano,Status\n';
+            
+            // Adicionar dados
+            sales.forEach(sale => {
+                const date = new Date(sale.created_at);
+                const dateStr = date.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                const timeStr = date.toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    timeZone: 'America/Sao_Paulo'
+                });
+                
+                csv += `${dateStr},${timeStr},${sale.service_type},${sale.customer_cpf},${sale.quantity},${sale.iccid || '-'},${sale.plan || '-'},${sale.status}\n`;
+            });
+            
+            // Criar blob e fazer download
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const now = new Date();
+            const fileName = `vendas_brisanet_${now.toLocaleDateString('pt-BR').replace(/\//g, '-')}.csv`;
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`Relatório exportado com sucesso!\nTotal de ${sales.length} ${sales.length === 1 ? 'venda' : 'vendas'} exportadas.`);
+        }
+
         function toggleDateGroup(dateKey) {
             if (collapsedDates.has(dateKey)) {
                 collapsedDates.delete(dateKey);
@@ -2000,7 +2086,9 @@
                     : 'Período Personalizado';
             }
 
-            const salesByDate = groupSalesByDate(sales);
+            // Aplicar filtro de busca
+            const filteredSales = filterSalesBySearch(sales);
+            const salesByDate = groupSalesByDate(filteredSales);
             const sortedDates = Object.keys(salesByDate).sort((a, b) => new Date(b) - new Date(a));
             
             // Inicializar todas as datas como fechadas
@@ -2150,11 +2238,44 @@
                     </div>
 
                     <div class="card animate-in-delay-5">
-                        <div class="section-header">
+                        <div class="section-header" style="margin-bottom: 20px;">
                             ${icons.list}
                             <h2 style="margin: 0;">Histórico de Vendas (${periodText})</h2>
                         </div>
-                        ${sales.length > 0 ? `
+                        
+                        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 250px; position: relative;">
+                                <div style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5;">
+                                    ${icons.search}
+                                </div>
+                                <input 
+                                    type="text" 
+                                    placeholder="Buscar por CPF, ICCID, plano, tipo ou status..." 
+                                    value="${searchTerm}"
+                                    oninput="handleSearch(this.value)"
+                                    style="padding-left: 45px; margin: 0;"
+                                >
+                            </div>
+                            <button 
+                                onclick="exportToExcel(${JSON.stringify(sales).replace(/"/g, '&quot;')})"
+                                style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 14px 24px; white-space: nowrap; display: flex; align-items: center; gap: 8px;"
+                            >
+                                ${icons.download}
+                                <span>Exportar Excel</span>
+                            </button>
+                        </div>
+                        
+                        ${searchTerm && filteredSales.length !== sales.length ? `
+                            <div style="background: rgba(255, 107, 0, 0.1); border: 1px solid rgba(255, 107, 0, 0.3); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                                ${icons.search}
+                                <span>Mostrando ${filteredSales.length} de ${sales.length} vendas para "${searchTerm}"</span>
+                                <button onclick="handleSearch('')" style="margin-left: auto; padding: 6px 12px; background: rgba(255, 107, 0, 0.2); border: 1px solid rgba(255, 107, 0, 0.4);">
+                                    ${icons.x} Limpar
+                                </button>
+                            </div>
+                        ` : ''}
+                        
+                        ${filteredSales.length > 0 ? `
                             <div>
                                 ${sortedDates.map(dateKey => {
                                     const dateSales = salesByDate[dateKey];
@@ -2208,6 +2329,9 @@
                                                                         </td>
                                                                         <td>${saleTime}</td>
                                                                         <td style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                                            <button onclick="startEditSale('${sale.id}')" style="width: auto; padding: 10px 18px; font-size: 13px; background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); white-space: nowrap;">
+                                                                                ${icons.edit} Editar
+                                                                            </button>
                                                                             ${sale.service_type !== 'BrisaChip' ? (
                                                                                 sale.status === 'Pendente' 
                                                                                 ? `<button onclick="toggleStatus('${sale.id}', 'Efetivado')" style="width: auto; padding: 10px 18px; font-size: 13px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); white-space: nowrap;">✓ Efetivar</button>`
@@ -2272,9 +2396,28 @@
             if (!formContainer) return;
 
             let formHTML = '';
+            const isEditing = editingSaleId !== null;
+            const buttonHTML = isEditing 
+                ? `
+                    <button onclick="handleUpdateSale()">
+                        ${icons.check}
+                        <span>Atualizar Venda</span>
+                    </button>
+                    <button onclick="cancelEdit()" class="btn-outline" style="margin-top: 12px;">
+                        ${icons.x}
+                        <span>Cancelar Edição</span>
+                    </button>
+                `
+                : `
+                    <button onclick="handleAddSale()">
+                        ${icons.check}
+                        <span>Registrar Venda</span>
+                    </button>
+                `;
 
             if (selectedSaleType === 'Combo') {
                 formHTML = `
+                    ${isEditing ? '<div style="background: rgba(0, 123, 255, 0.15); border: 1px solid rgba(0, 123, 255, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: center;"><span style="color: #007bff; font-weight: 700; font-size: 15px;">✏️ Modo de Edição</span></div>' : ''}
                     <div class="form-group">
                         <label class="form-label">Plano (Opcional)</label>
                         <input type="text" id="customPlan" placeholder="Ex: 500MB + Brisachip">
@@ -2295,13 +2438,11 @@
                             <option value="Efetivado">Efetivado</option>
                         </select>
                     </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
+                    ${buttonHTML}
                 `;
             } else if (selectedSaleType === 'BrisaChip') {
                 formHTML = `
+                    ${isEditing ? '<div style="background: rgba(0, 123, 255, 0.15); border: 1px solid rgba(0, 123, 255, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: center;"><span style="color: #007bff; font-weight: 700; font-size: 15px;">✏️ Modo de Edição</span></div>' : ''}
                     <div class="form-label" style="margin-bottom: 16px;">Selecione o Plano:</div>
                     <div class="plan-selector">
                         <div class="plan-card ${selectedPlan === '20GB - R$ 29,99' ? 'active' : ''}" onclick="selectPlan('20GB - R$ 29,99')">
@@ -2334,13 +2475,11 @@
                         <label class="form-label">ICCID (Últimos 8 dígitos - Obrigatório)</label>
                         <input type="text" id="iccid" placeholder="Digite os 8 últimos dígitos" maxlength="8">
                     </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
+                    ${buttonHTML}
                 `;
             } else if (selectedSaleType === 'Fibra') {
                 formHTML = `
+                    ${isEditing ? '<div style="background: rgba(0, 123, 255, 0.15); border: 1px solid rgba(0, 123, 255, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: center;"><span style="color: #007bff; font-weight: 700; font-size: 15px;">✏️ Modo de Edição</span></div>' : ''}
                     <div class="form-group">
                         <label class="form-label">Plano (Opcional)</label>
                         <input type="text" id="customPlan" placeholder="Ex: 350MB + Streaming">
@@ -2361,10 +2500,7 @@
                             <option value="Efetivado">Efetivado</option>
                         </select>
                     </div>
-                    <button onclick="handleAddSale()">
-                        ${icons.check}
-                        <span>Registrar Venda</span>
-                    </button>
+                    ${buttonHTML}
                 `;
             } else {
                 formHTML = '<p style="text-align: center; color: rgba(255, 255, 255, 0.4); padding: 60px 20px; font-size: 15px;">Selecione um tipo de serviço acima</p>';
@@ -2551,6 +2687,123 @@
                     await changePage('dashboard');
                 }
             }
+        }
+
+        async function startEditSale(saleId) {
+            const allSales = await getSales();
+            const sale = allSales.find(s => s.id === saleId);
+            
+            if (!sale) {
+                alert('Venda não encontrada!');
+                return;
+            }
+            
+            editingSaleId = saleId;
+            selectedSaleType = sale.service_type;
+            selectedPlan = sale.plan || '';
+            
+            await changePage('dashboard');
+            
+            // Preencher campos após renderizar
+            setTimeout(() => {
+                const cpfInput = document.getElementById('customerCPF');
+                const quantityInput = document.getElementById('quantity');
+                const iccidInput = document.getElementById('iccid');
+                const statusInput = document.getElementById('status');
+                const customPlanInput = document.getElementById('customPlan');
+                
+                if (cpfInput) cpfInput.value = sale.customer_cpf;
+                if (quantityInput) quantityInput.value = sale.quantity;
+                if (iccidInput) iccidInput.value = sale.iccid || '';
+                if (statusInput) statusInput.value = sale.status;
+                if (customPlanInput && !selectedPlan) customPlanInput.value = sale.plan || '';
+                
+                // Rolar para o formulário
+                document.getElementById('saleForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        async function handleUpdateSale() {
+            const cpfInput = document.getElementById('customerCPF');
+            const quantityInput = document.getElementById('quantity');
+            const iccidInput = document.getElementById('iccid');
+            const statusInput = document.getElementById('status');
+            const customPlanInput = document.getElementById('customPlan');
+            
+            const customerCPF = cpfInput ? cpfInput.value.trim() : '';
+            const quantity = quantityInput ? quantityInput.value : '1';
+            const iccid = iccidInput ? iccidInput.value.trim() : '';
+            const status = statusInput ? statusInput.value : 'Pendente';
+            const customPlan = customPlanInput ? customPlanInput.value.trim() : '';
+
+            if (!selectedSaleType) {
+                alert('Selecione o tipo de serviço!');
+                return;
+            }
+
+            if (!quantity) {
+                alert('Preencha o campo de quantidade!');
+                return;
+            }
+
+            if (selectedSaleType === 'BrisaChip') {
+                if (!iccid) {
+                    alert('O campo ICCID é obrigatório para BrisaChip!');
+                    return;
+                }
+                if (iccid.length !== 8) {
+                    alert('O ICCID deve ter exatamente 8 dígitos!');
+                    return;
+                }
+                if (!/^\d{8}$/.test(iccid)) {
+                    alert('O ICCID deve conter apenas números!');
+                    return;
+                }
+                if (!selectedPlan) {
+                    alert('Selecione um plano para BrisaChip!');
+                    return;
+                }
+            }
+
+            try {
+                const updateData = {
+                    service_type: selectedSaleType,
+                    customer_cpf: customerCPF || 'Não informado',
+                    quantity: parseInt(quantity),
+                    iccid: iccid || null,
+                    status: selectedSaleType === 'BrisaChip' ? 'Efetivado' : status
+                };
+                
+                if (selectedPlan) {
+                    updateData.plan = selectedPlan;
+                } else if (customPlan) {
+                    updateData.plan = customPlan;
+                }
+                
+                const { error } = await supabase
+                    .from('sales')
+                    .update(updateData)
+                    .eq('id', editingSaleId)
+                    .eq('user_id', currentUser.id);
+                
+                if (error) throw error;
+                
+                alert('Venda atualizada com sucesso!');
+                editingSaleId = null;
+                selectedSaleType = '';
+                selectedPlan = '';
+                await changePage('dashboard');
+            } catch (error) {
+                console.error('Erro ao atualizar venda:', error);
+                alert('Erro ao atualizar venda: ' + error.message);
+            }
+        }
+
+        function cancelEdit() {
+            editingSaleId = null;
+            selectedSaleType = '';
+            selectedPlan = '';
+            changePage('dashboard');
         }
 
         function changePeriod(period) {
